@@ -1,0 +1,2 @@
+Parser-eksempel: https://github.com/alecthomas/participle/blob/master/_examples/expr/main.go
+
