@@ -3,3 +3,15 @@ logging
 
 postman baseurl
 Fremsøg alle TODOS
+
+Skriv tekst om PEMDAS
+
+test coverage
+
+Kommaer?
+
+Input længde validering
+    - til /compute
+    - til output?
+    - til historie-id
+    - Svaret i compute kan være for langt til at kunne gemmes i historikken! Kig på det!

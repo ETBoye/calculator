@@ -12,9 +12,8 @@ type ComputeRequest struct {
 }
 
 type ComputeResponse struct {
-	Result           *string `json:"result"`
-	CalculationError *string `json:"calculationError"` // TODO: Document difference in errors
-	Error            *string `json:"error"`
+	CalculationResult *calculation.CalculationResult `json:"calculationResult"`
+	Error             *string                        `json:"error"`
 }
 
 type ComputationHandler interface {
@@ -47,8 +46,7 @@ func (c StandardComputationHandler) GetResponse(computeRequest ComputeRequest) S
 	return SimpleHttpResponse[ComputeResponse]{
 		Status: http.StatusOK,
 		Response: ComputeResponse{
-			Result:           calculationResult.Result,
-			CalculationError: calculationResult.ErrorMessage,
+			CalculationResult: &calculationResult,
 		},
 	}
 }

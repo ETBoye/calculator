@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/alecthomas/participle/v2 v2.1.4
 	github.com/bytedance/sonic v1.11.9 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
