@@ -1,0 +1,8 @@
+package calculation
+
+const PRECISION_DIGITS = 5
+
+var PARSING_ERROR_ID string = "PARSING_ERROR"
+var LEXING_ERROR_ID string = "LEXING_ERROR"
+var EMPTY_INPUT_ERROR_ID string = "EMPTY_INPUT"
+var DIVISION_BY_ZERO_ERROR_ID string = "DIVISION_BY_ZERO"

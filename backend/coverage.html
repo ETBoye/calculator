@@ -57,13 +57,19 @@
 				
 				<option value="file0">github.com/etboye/calculator/api/compute.go (0.0%)</option>
 				
-				<option value="file1">github.com/etboye/calculator/calculation/expressionevaluator.go (78.6%)</option>
+				<option value="file1">github.com/etboye/calculator/calculation/expressioncalculator.go (100.0%)</option>
 				
-				<option value="file2">github.com/etboye/calculator/main.go (0.0%)</option>
+				<option value="file2">github.com/etboye/calculator/calculation/expressionmodel.go (8.7%)</option>
 				
-				<option value="file3">github.com/etboye/calculator/server/ginserver.go (0.0%)</option>
+				<option value="file3">github.com/etboye/calculator/calculation/expressionmodeleval.go (100.0%)</option>
 				
-				<option value="file4">github.com/etboye/calculator/util/panicrecover.go (100.0%)</option>
+				<option value="file4">github.com/etboye/calculator/calculation/expressionparser.go (100.0%)</option>
+				
+				<option value="file5">github.com/etboye/calculator/main.go (0.0%)</option>
+				
+				<option value="file6">github.com/etboye/calculator/server/ginserver.go (0.0%)</option>
+				
+				<option value="file7">github.com/etboye/calculator/util/panicrecover.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -135,22 +141,66 @@ func (c StandardComputationHandler) GetResponse(computeRequest ComputeRequest) S
 
 import (
         "errors"
-        "fmt"
         "log"
-        "math/big"
-        "strings"
 
-        "github.com/alecthomas/participle/v2"
-        "github.com/alecthomas/participle/v2/lexer"
         "github.com/etboye/calculator/util"
 )
 
-const PRECISION_DIGITS = 5
+type Parser interface {
+        Parse(calculationInput CalculationInput) (*Expression, error)
+}
 
-var PARSING_ERROR_ID string = "PARSING_ERROR"
-var LEXING_ERROR_ID string = "LEXING_ERROR"
-var EMPTY_INPUT_ERROR_ID string = "EMPTY_INPUT"
-var DIVISION_BY_ZERO_ERROR_ID string = "DIVISION_BY_ZERO"
+type ExpressionCalculator struct {
+        parser Parser
+}
+
+func NewExpressionCalculatorWithParser(parser Parser) ExpressionCalculator <span class="cov8" title="1">{
+        return ExpressionCalculator{parser: parser}
+}</span>
+
+func NewDefaultExpressionCalculator() ExpressionCalculator <span class="cov8" title="1">{
+        parser := newParticipleParser()
+        return ExpressionCalculator{parser: &amp;parser}
+}</span>
+
+func (calculator ExpressionCalculator) Compute(input CalculationInput) CalculationResult <span class="cov8" title="1">{
+        // I think I've seen the parser panic sometimes on really bad inputs
+        // I can't seem to reproduce this - but we protect for it anyways
+        expression, err := util.RecoverFromPanicWithError(
+                func() (*Expression, error) </span><span class="cov8" title="1">{ return calculator.parser.Parse(input) }</span>,
+                nil, errors.New(PARSING_ERROR_ID), "Recovered from parsing panic")
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                errorId := err.Error()
+                return CalculationResult{ErrorId: &amp;errorId}
+        }</span>
+
+        <span class="cov8" title="1">resultAsRat, err := expression.Eval()
+
+        if err != nil </span><span class="cov8" title="1">{
+                errorId := err.Error()
+                log.Println("Calculation returned error with id", errorId)
+                return CalculationResult{
+                        ErrorId: &amp;errorId,
+                }
+        }</span>
+
+        <span class="cov8" title="1">result := RationalNumber{
+                Num:      resultAsRat.Num().String(),
+                Denom:    resultAsRat.Denom().String(),
+                Estimate: resultAsRat.FloatString(PRECISION_DIGITS),
+        }
+
+        return CalculationResult{Result: &amp;result}</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package calculation
+
+import (
+        "fmt"
+        "strings"
+)
 
 // Borrowing heavily from https://github.com/alecthomas/participle/blob/master/_examples/expr/main.go
 type Operator int
@@ -243,8 +293,15 @@ func (e *Expression) String() string <span class="cov0" title="0">{
         }</span>
         <span class="cov0" title="0">return strings.Join(out, " ")</span>
 }
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package calculation
 
-// EVAL
+import (
+        "errors"
+        "math/big"
+        "strings"
+)
 
 // precondition: digitStringWithSign matches `-\d+`
 func ratFromIntegerString(digitStringWithSign string) *big.Rat <span class="cov8" title="1">{
@@ -326,10 +383,19 @@ func (v *Value) Eval() (*big.Rat, error) <span class="cov8" title="1">{
 
         <span class="cov8" title="1">return v.Subexpression.Eval()</span>
 }
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package calculation
 
-type Parser interface {
-        Parse(calculationInput CalculationInput) (*Expression, error)
-}
+import (
+        "errors"
+        "fmt"
+        "log"
+        "strings"
+
+        "github.com/alecthomas/participle/v2"
+        "github.com/alecthomas/participle/v2/lexer"
+)
 
 type participleParser struct {
         parser        *participle.Parser[Expression]
@@ -384,50 +450,6 @@ func newParticipleParser() participleParser <span class="cov8" title="1">{
         return participleParser{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
 }</span>
 
-type ExpressionCalculator struct {
-        parser Parser
-}
-
-func NewExpressionCalculatorWithParser(parser Parser) ExpressionCalculator <span class="cov8" title="1">{
-        return ExpressionCalculator{parser: parser}
-}</span>
-
-func NewDefaultExpressionCalculator() ExpressionCalculator <span class="cov8" title="1">{
-        parser := newParticipleParser()
-        return ExpressionCalculator{parser: &amp;parser}
-}</span>
-
-func (calculator ExpressionCalculator) Compute(input CalculationInput) CalculationResult <span class="cov8" title="1">{
-        // I think I've seen the parser panic sometimes on really bad inputs
-        // I can't seem to reproduce this - but we protect for it anyways
-        expression, err := util.RecoverFromPanicWithError(
-                func() (*Expression, error) </span><span class="cov8" title="1">{ return calculator.parser.Parse(input) }</span>,
-                nil, errors.New(PARSING_ERROR_ID), "Recovered from parsing panic")
-
-        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
-                errorId := err.Error()
-                return CalculationResult{ErrorId: &amp;errorId}
-        }</span>
-
-        <span class="cov8" title="1">resultAsRat, err := expression.Eval()
-
-        if err != nil </span><span class="cov8" title="1">{
-                errorId := err.Error()
-                log.Println("Calculation returned error with id", errorId)
-                return CalculationResult{
-                        ErrorId: &amp;errorId,
-                }
-        }</span>
-
-        <span class="cov8" title="1">result := RationalNumber{
-                Num:      resultAsRat.Num().String(),
-                Denom:    resultAsRat.Denom().String(),
-                Estimate: resultAsRat.FloatString(PRECISION_DIGITS),
-        }
-
-        return CalculationResult{Result: &amp;result}</span>
-}
-
 func logLexingResult(input CalculationInput, tokens []lexer.Token, lexingSymbols map[lexer.TokenType]string) <span class="cov8" title="1">{
         var sb strings.Builder
 
@@ -441,7 +463,7 @@ func logLexingResult(input CalculationInput, tokens []lexer.Token, lexingSymbols
 }
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">package main
+		<pre class="file" id="file5" style="display: none">package main
 
 import (
         "github.com/etboye/calculator/api"
@@ -465,7 +487,7 @@ func main() <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">package server
+		<pre class="file" id="file6" style="display: none">package server
 
 import (
         "bytes"
@@ -533,7 +555,7 @@ func sendSimpleHttpResponse[T any](c *gin.Context, httpResponse api.SimpleHttpRe
 }</span>
 </pre>
 		
-		<pre class="file" id="file4" style="display: none">package util
+		<pre class="file" id="file7" style="display: none">package util
 
 import "fmt"
 
