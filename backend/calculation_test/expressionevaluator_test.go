@@ -2,21 +2,64 @@ package calculation_test
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"math/big"
 	"testing"
 
 	"github.com/etboye/calculator/calculation"
 )
 
+type PanickyParser struct{}
+
+func (p PanickyParser) Parse(input calculation.CalculationInput) (*calculation.Expression, error) {
+	panic("This is my panic message")
+}
+
+var parsingErrorId string = "PARSING_ERROR"
+var lexingErrorId string = "LEXING_ERROR"
+var emptyInputErrorId string = "EMPTY_INPUT"
+
+func TestParserPanicRecovery(t *testing.T) {
+	log.SetOutput(io.Discard)
+
+	calculatorWithPanickyParser := calculation.NewExpressionCalculatorWithParser(PanickyParser{})
+	result := calculatorWithPanickyParser.Compute(calculation.CalculationInput{Input: "1+1"})
+
+	if result.ErrorId == nil {
+		t.Errorf("Expected errorId %s, got nil", parsingErrorId)
+		return
+	}
+
+	if *result.ErrorId != parsingErrorId {
+		t.Errorf("Expected errorId %s, got %s", parsingErrorId, *result.ErrorId)
+		return
+	}
+}
+
 func TestParsing(t *testing.T) {
-	// TODO: Implement
-	// TODO: Unmatched brackets
-	// TODO: Something about +1 as constant
-	// TODO: Implement some handling that can recover from a panic
+	log.SetOutput(io.Discard)
+	calculator := calculation.NewDefaultExpressionCalculator()
+
+	assertExpectedError := func(inputString string, expectedErrorId string) {
+		assertExpectedError(t, calculator, inputString, expectedErrorId)
+	}
+
+	assertExpectedError("(", parsingErrorId)
+	assertExpectedError("+1", parsingErrorId)
+	assertExpectedError("1-", parsingErrorId)
+	assertExpectedError("(1+5/(2040*2*2+4)", parsingErrorId) // mismatched brackets
+	assertExpectedError("//", parsingErrorId)
+	assertExpectedError("+/+", parsingErrorId)
+	assertExpectedError("", emptyInputErrorId)
+
+	assertExpectedError("sdfadsf", lexingErrorId)
 }
 
 func TestCalculation(t *testing.T) {
-	calculator := calculation.NewExpressionCalculator()
+	log.SetOutput(io.Discard)
+
+	calculator := calculation.NewDefaultExpressionCalculator()
 
 	// A bit of currying for readability
 	assertExpectedOutput := func(inputString string, expectedOutput *big.Rat) {
@@ -24,12 +67,7 @@ func TestCalculation(t *testing.T) {
 	}
 
 	assertExpectedError := func(inputString string, expectedErrorId string) {
-		t.Run(fmt.Sprintf("Expect input %s to give errorId %s", inputString, expectedErrorId), func(t *testing.T) {
-			calculationResult := calculator.Compute(calculation.CalculationInput{Input: inputString})
-			if *calculationResult.ErrorId != expectedErrorId {
-				t.Errorf("Expected errorId %s, got errorId %s", expectedErrorId, *calculationResult.ErrorId)
-			}
-		})
+		assertExpectedError(t, calculator, inputString, expectedErrorId)
 	}
 
 	// We will use these to test that we can handle big constants
@@ -84,9 +122,12 @@ func TestCalculation(t *testing.T) {
 	assertExpectedOutput("(3/5+5432/83)*(-432)*(1+5/(2040*2*2+4))", big.NewRat(-24181645068, 847015))
 
 	// Failures
-	// Divide by zero
 	assertExpectedError("1/0", "DIVISION_BY_ZERO")
+	assertExpectedError("(1/0)", "DIVISION_BY_ZERO")   // Triggers different error handling in coverage - at least as of now!
+	assertExpectedError("1*(1/0)", "DIVISION_BY_ZERO") // Triggers different error handling in coverage - at least as of now!
+	assertExpectedError("1+(1/0)", "DIVISION_BY_ZERO") // Triggers different error handling in coverage - at least as of now!
 
+	// TODO: Test for big output
 }
 
 func intStringToRat(intString string) *big.Rat {
@@ -95,12 +136,27 @@ func intStringToRat(intString string) *big.Rat {
 	return newRat
 }
 
+func assertExpectedError(t *testing.T, calculator calculation.Calculator, inputString string, expectedErrorId string) {
+	t.Run(fmt.Sprintf("Expect input %s to give errorId %s", inputString, expectedErrorId), func(t *testing.T) {
+		calculationResult := calculator.Compute(calculation.CalculationInput{Input: inputString})
+
+		if calculationResult.ErrorId == nil {
+			t.Errorf("Expected calculation error, but there was none")
+			return
+		}
+
+		if *calculationResult.ErrorId != expectedErrorId {
+			t.Errorf("Expected errorId %s, got errorId %s", expectedErrorId, *calculationResult.ErrorId)
+		}
+	})
+}
+
 func assertExpectedOutput(t *testing.T, calculator calculation.Calculator, inputString string, expectedOutput *big.Rat) {
 	t.Run(fmt.Sprintf("Expect input: %s to output rational equal to %s", inputString, expectedOutput.String()), func(t *testing.T) {
 		calculationResult := calculator.Compute(calculation.CalculationInput{Input: inputString})
 
 		if calculationResult.ErrorId != nil {
-			t.Errorf("calculationResult had a non-null error id - expected nil")
+			t.Errorf("calculationResult had a non-null error id - expected nil, got %s", *calculationResult.ErrorId)
 		}
 
 		resultAsRat := big.NewRat(0, 1)

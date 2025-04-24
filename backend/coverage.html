@@ -57,11 +57,13 @@
 				
 				<option value="file0">github.com/etboye/calculator/api/compute.go (0.0%)</option>
 				
-				<option value="file1">github.com/etboye/calculator/calculation/expressionevaluator.go (88.8%)</option>
+				<option value="file1">github.com/etboye/calculator/calculation/expressionevaluator.go (78.6%)</option>
 				
 				<option value="file2">github.com/etboye/calculator/main.go (0.0%)</option>
 				
 				<option value="file3">github.com/etboye/calculator/server/ginserver.go (0.0%)</option>
+				
+				<option value="file4">github.com/etboye/calculator/util/panicrecover.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -140,6 +142,7 @@ import (
 
         "github.com/alecthomas/participle/v2"
         "github.com/alecthomas/participle/v2/lexer"
+        "github.com/etboye/calculator/util"
 )
 
 const PRECISION_DIGITS = 5
@@ -194,51 +197,51 @@ type Expression struct {
 
 // Display
 
-func (o Operator) String() string <span class="cov8" title="1">{
+func (o Operator) String() string <span class="cov0" title="0">{
         switch o </span>{
-        case OpMul:<span class="cov8" title="1">
+        case OpMul:<span class="cov0" title="0">
                 return "*"</span>
-        case OpQuo:<span class="cov8" title="1">
+        case OpQuo:<span class="cov0" title="0">
                 return "/"</span>
-        case OpSub:<span class="cov8" title="1">
+        case OpSub:<span class="cov0" title="0">
                 return "-"</span>
-        case OpAdd:<span class="cov8" title="1">
+        case OpAdd:<span class="cov0" title="0">
                 return "+"</span>
         }
         <span class="cov0" title="0">panic("unsupported operator")</span>
 }
 
-func (v *Value) String() string <span class="cov8" title="1">{
-        if v.IntegerWithoutSign != nil </span><span class="cov8" title="1">{
+func (v *Value) String() string <span class="cov0" title="0">{
+        if v.IntegerWithoutSign != nil </span><span class="cov0" title="0">{
                 return *v.IntegerWithoutSign
-        }</span> else<span class="cov8" title="1"> if v.IntegerWithSign != nil </span><span class="cov8" title="1">{
+        }</span> else<span class="cov0" title="0"> if v.IntegerWithSign != nil </span><span class="cov0" title="0">{
                 return "-" + *v.IntegerWithSign
         }</span>
-        <span class="cov8" title="1">return "(" + v.Subexpression.String() + ")"</span>
+        <span class="cov0" title="0">return "(" + v.Subexpression.String() + ")"</span>
 }
 
-func (o *OpFactor) String() string <span class="cov8" title="1">{
+func (o *OpFactor) String() string <span class="cov0" title="0">{
         return fmt.Sprintf("%s %s", o.Operator, o.Factor)
 }</span>
 
-func (t *Term) String() string <span class="cov8" title="1">{
+func (t *Term) String() string <span class="cov0" title="0">{
         out := []string{t.Left.String()}
-        for _, r := range t.Right </span><span class="cov8" title="1">{
+        for _, r := range t.Right </span><span class="cov0" title="0">{
                 out = append(out, r.String())
         }</span>
-        <span class="cov8" title="1">return strings.Join(out, " ")</span>
+        <span class="cov0" title="0">return strings.Join(out, " ")</span>
 }
 
-func (o *OpTerm) String() string <span class="cov8" title="1">{
+func (o *OpTerm) String() string <span class="cov0" title="0">{
         return fmt.Sprintf("%s %s", o.Operator, o.Term)
 }</span>
 
-func (e *Expression) String() string <span class="cov8" title="1">{
+func (e *Expression) String() string <span class="cov0" title="0">{
         out := []string{e.Left.String()}
-        for _, r := range e.Right </span><span class="cov8" title="1">{
+        for _, r := range e.Right </span><span class="cov0" title="0">{
                 out = append(out, r.String())
         }</span>
-        <span class="cov8" title="1">return strings.Join(out, " ")</span>
+        <span class="cov0" title="0">return strings.Join(out, " ")</span>
 }
 
 // EVAL
@@ -257,7 +260,7 @@ func ratFromIntegerString(digitStringWithSign string) *big.Rat <span class="cov8
 func (t *Term) Eval() (*big.Rat, error) <span class="cov8" title="1">{
         result, err := t.Left.Eval()
 
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return result, err
         }</span>
 
@@ -268,7 +271,7 @@ func (t *Term) Eval() (*big.Rat, error) <span class="cov8" title="1">{
         <span class="cov8" title="1">for _, opTerm := range t.Right </span><span class="cov8" title="1">{
                 factorEval, err := opTerm.Factor.Eval()
 
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         return big.NewRat(1, 1), err
                 }</span>
 
@@ -300,7 +303,7 @@ func (e *Expression) Eval() (*big.Rat, error) <span class="cov8" title="1">{
         <span class="cov8" title="1">for _, opTerm := range e.Right </span><span class="cov8" title="1">{
                 termEval, err := opTerm.Term.Eval()
 
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         return big.NewRat(1, 1), err
                 }</span>
 
@@ -324,13 +327,43 @@ func (v *Value) Eval() (*big.Rat, error) <span class="cov8" title="1">{
         <span class="cov8" title="1">return v.Subexpression.Eval()</span>
 }
 
-type ExpressionCalculator struct {
+type Parser interface {
+        Parse(calculationInput CalculationInput) (*Expression, error)
+}
+
+type participleParser struct {
         parser        *participle.Parser[Expression]
         lexingSymbols map[lexer.TokenType]string
 }
 
-func NewExpressionCalculator() ExpressionCalculator <span class="cov8" title="1">{
+func (parser *participleParser) Parse(input CalculationInput) (*Expression, error) <span class="cov8" title="1">{
+        if len(strings.TrimSpace(input.Input)) == 0 </span><span class="cov8" title="1">{
+                log.Printf("Received empty input")
+                return nil, errors.New(EMPTY_INPUT_ERROR_ID)
+        }</span>
 
+        <span class="cov8" title="1">tokens, lexerError := parser.parser.Lex("", strings.NewReader(input.Input))
+
+        if lexerError != nil </span><span class="cov8" title="1">{
+                log.Println("Lexing error thrown:", lexerError.Error())
+                return nil, errors.New(LEXING_ERROR_ID)
+
+        }</span>
+
+        <span class="cov8" title="1">logLexingResult(input, tokens, parser.lexingSymbols)
+
+        expression, err := parser.parser.ParseString("", input.Input) // This actually lexes again. We accept this..
+
+        if err != nil </span><span class="cov8" title="1">{
+                log.Println("Parsing error thrown:", err.Error())
+                return nil, errors.New(PARSING_ERROR_ID)
+        }</span>
+
+        <span class="cov8" title="1">log.Printf("Parsing succesful. Has parsed to %s", expression)
+        return expression, nil</span>
+}
+
+func newParticipleParser() participleParser <span class="cov8" title="1">{
         var myLexer = lexer.MustSimple([]lexer.SimpleRule{
                 {Name: "UnsignedInteger", Pattern: `\d+`},
                 {Name: "OpAdd", Pattern: `\+`},
@@ -347,43 +380,36 @@ func NewExpressionCalculator() ExpressionCalculator <span class="cov8" title="1"
                 participle.Elide("WhiteSpace"), // The parser should ignore any whitespace
 
         )
-        return ExpressionCalculator{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
+
+        return participleParser{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
+}</span>
+
+type ExpressionCalculator struct {
+        parser Parser
+}
+
+func NewExpressionCalculatorWithParser(parser Parser) ExpressionCalculator <span class="cov8" title="1">{
+        return ExpressionCalculator{parser: parser}
+}</span>
+
+func NewDefaultExpressionCalculator() ExpressionCalculator <span class="cov8" title="1">{
+        parser := newParticipleParser()
+        return ExpressionCalculator{parser: &amp;parser}
 }</span>
 
 func (calculator ExpressionCalculator) Compute(input CalculationInput) CalculationResult <span class="cov8" title="1">{
-        if len(strings.TrimSpace(input.Input)) == 0 </span><span class="cov0" title="0">{
-                log.Printf("Received empty input")
-                return CalculationResult{
-                        ErrorId: &amp;EMPTY_INPUT_ERROR_ID,
-                }
+        // I think I've seen the parser panic sometimes on really bad inputs
+        // I can't seem to reproduce this - but we protect for it anyways
+        expression, err := util.RecoverFromPanicWithError(
+                func() (*Expression, error) </span><span class="cov8" title="1">{ return calculator.parser.Parse(input) }</span>,
+                nil, errors.New(PARSING_ERROR_ID), "Recovered from parsing panic")
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                errorId := err.Error()
+                return CalculationResult{ErrorId: &amp;errorId}
         }</span>
 
-        <span class="cov8" title="1">tokens, lexerError := calculator.parser.Lex("", strings.NewReader(input.Input))
-
-        if lexerError != nil </span><span class="cov0" title="0">{
-                log.Println("Lexing error thrown:", lexerError.Error())
-
-                return CalculationResult{
-                        ErrorId: &amp;LEXING_ERROR_ID,
-                }
-        }</span>
-
-        <span class="cov8" title="1">logLexingResult(input, tokens, calculator.lexingSymbols)
-
-        expression, err := calculator.parser.ParseString("", input.Input) // This actually lexes again. We accept this..
-
-        // TODO: error handling with test
-        if err != nil </span><span class="cov0" title="0">{
-                log.Println("Parsing error thrown:", err.Error())
-
-                return CalculationResult{
-                        ErrorId: &amp;PARSING_ERROR_ID,
-                }
-        }</span>
-
-        <span class="cov8" title="1">log.Printf("Parsing succesful. Has parsed to %s", expression)
-
-        resultAsRat, err := expression.Eval()
+        <span class="cov8" title="1">resultAsRat, err := expression.Eval()
 
         if err != nil </span><span class="cov8" title="1">{
                 errorId := err.Error()
@@ -430,7 +456,7 @@ type Application struct {
 func main() <span class="cov0" title="0">{
         server := server.GinServer{}
 
-        calculator := calculation.NewExpressionCalculator()
+        calculator := calculation.NewDefaultExpressionCalculator()
 
         endpoints := api.Endpoints{
                 ComputationHandler: api.NewStandardComputationHandler(&amp;calculator),
@@ -505,6 +531,46 @@ func getBodyAsString(body io.ReadCloser) string <span class="cov0" title="0">{
 func sendSimpleHttpResponse[T any](c *gin.Context, httpResponse api.SimpleHttpResponse[T]) <span class="cov0" title="0">{
         c.JSON(httpResponse.Status, httpResponse.Response)
 }</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package util
+
+import "fmt"
+
+type withError[T any] struct {
+        t   T
+        err error
+}
+
+func RecoverFromPanicWithError[T any](f func() (T, error), recoverItem T, recoverError error, recoverMessage string) (T, error) <span class="cov8" title="1">{
+
+        resultWithError := RecoverFromPanic[withError[T]](func() withError[T] </span><span class="cov8" title="1">{
+                t, err := f()
+
+                result := withError[T]{t: t, err: err}
+                return result
+        }</span>, withError[T]{t: recoverItem, err: recoverError}, recoverMessage)
+
+        <span class="cov8" title="1">return resultWithError.t, resultWithError.err</span>
+}
+
+func RecoverFromPanic[T any](f func() T, recoverItem T, recoverMessage string) T <span class="cov8" title="1">{
+        c := make(chan T)
+
+        go func() </span><span class="cov8" title="1">{
+                defer func() </span><span class="cov8" title="1">{
+                        if r := recover(); r != nil </span><span class="cov8" title="1">{
+                                fmt.Println(recoverMessage, r)
+                                c &lt;- recoverItem
+                        }</span>
+                }()
+
+                <span class="cov8" title="1">c &lt;- f()</span>
+        }()
+
+        <span class="cov8" title="1">result := &lt;-c
+        return result</span>
+}
 </pre>
 		
 		</div>

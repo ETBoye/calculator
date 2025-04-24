@@ -13,7 +13,7 @@ type Application struct {
 func main() {
 	server := server.GinServer{}
 
-	calculator := calculation.NewExpressionCalculator()
+	calculator := calculation.NewDefaultExpressionCalculator()
 
 	endpoints := api.Endpoints{
 		ComputationHandler: api.NewStandardComputationHandler(&calculator),

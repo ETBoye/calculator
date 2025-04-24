@@ -9,6 +9,7 @@ import (
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/etboye/calculator/util"
 )
 
 const PRECISION_DIGITS = 5
@@ -193,13 +194,43 @@ func (v *Value) Eval() (*big.Rat, error) {
 	return v.Subexpression.Eval()
 }
 
-type ExpressionCalculator struct {
+type Parser interface {
+	Parse(calculationInput CalculationInput) (*Expression, error)
+}
+
+type participleParser struct {
 	parser        *participle.Parser[Expression]
 	lexingSymbols map[lexer.TokenType]string
 }
 
-func NewExpressionCalculator() ExpressionCalculator {
+func (parser *participleParser) Parse(input CalculationInput) (*Expression, error) {
+	if len(strings.TrimSpace(input.Input)) == 0 {
+		log.Printf("Received empty input")
+		return nil, errors.New(EMPTY_INPUT_ERROR_ID)
+	}
 
+	tokens, lexerError := parser.parser.Lex("", strings.NewReader(input.Input))
+
+	if lexerError != nil {
+		log.Println("Lexing error thrown:", lexerError.Error())
+		return nil, errors.New(LEXING_ERROR_ID)
+
+	}
+
+	logLexingResult(input, tokens, parser.lexingSymbols)
+
+	expression, err := parser.parser.ParseString("", input.Input) // This actually lexes again. We accept this..
+
+	if err != nil {
+		log.Println("Parsing error thrown:", err.Error())
+		return nil, errors.New(PARSING_ERROR_ID)
+	}
+
+	log.Printf("Parsing succesful. Has parsed to %s", expression)
+	return expression, nil
+}
+
+func newParticipleParser() participleParser {
 	var myLexer = lexer.MustSimple([]lexer.SimpleRule{
 		{Name: "UnsignedInteger", Pattern: `\d+`},
 		{Name: "OpAdd", Pattern: `\+`},
@@ -216,41 +247,34 @@ func NewExpressionCalculator() ExpressionCalculator {
 		participle.Elide("WhiteSpace"), // The parser should ignore any whitespace
 
 	)
-	return ExpressionCalculator{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
+
+	return participleParser{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
+}
+
+type ExpressionCalculator struct {
+	parser Parser
+}
+
+func NewExpressionCalculatorWithParser(parser Parser) ExpressionCalculator {
+	return ExpressionCalculator{parser: parser}
+}
+
+func NewDefaultExpressionCalculator() ExpressionCalculator {
+	parser := newParticipleParser()
+	return ExpressionCalculator{parser: &parser}
 }
 
 func (calculator ExpressionCalculator) Compute(input CalculationInput) CalculationResult {
-	if len(strings.TrimSpace(input.Input)) == 0 {
-		log.Printf("Received empty input")
-		return CalculationResult{
-			ErrorId: &EMPTY_INPUT_ERROR_ID,
-		}
-	}
+	// I think I've seen the parser panic sometimes on really bad inputs
+	// I can't seem to reproduce this - but we protect for it anyways
+	expression, err := util.RecoverFromPanicWithError(
+		func() (*Expression, error) { return calculator.parser.Parse(input) },
+		nil, errors.New(PARSING_ERROR_ID), "Recovered from parsing panic")
 
-	tokens, lexerError := calculator.parser.Lex("", strings.NewReader(input.Input))
-
-	if lexerError != nil {
-		log.Println("Lexing error thrown:", lexerError.Error())
-
-		return CalculationResult{
-			ErrorId: &LEXING_ERROR_ID,
-		}
-	}
-
-	logLexingResult(input, tokens, calculator.lexingSymbols)
-
-	expression, err := calculator.parser.ParseString("", input.Input) // This actually lexes again. We accept this..
-
-	// TODO: error handling with test
 	if err != nil {
-		log.Println("Parsing error thrown:", err.Error())
-
-		return CalculationResult{
-			ErrorId: &PARSING_ERROR_ID,
-		}
+		errorId := err.Error()
+		return CalculationResult{ErrorId: &errorId}
 	}
-
-	log.Printf("Parsing succesful. Has parsed to %s", expression)
 
 	resultAsRat, err := expression.Eval()
 
