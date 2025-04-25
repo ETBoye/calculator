@@ -2,7 +2,10 @@ version: '2'
 services:
 
   backend:
-    image: golang:1.24.2-alpine
+    image: over-engineered-calculator-backend
+    build: backend
+    ports:
+      - '8080:8080'
 
   db:
     image: postgres:17-alpine
