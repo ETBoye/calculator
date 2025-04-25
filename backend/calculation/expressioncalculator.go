@@ -26,7 +26,7 @@ func NewDefaultExpressionCalculator() ExpressionCalculator {
 
 func (calculator ExpressionCalculator) Compute(input CalculationInput) CalculationResult {
 	// I think I've seen the parser panic sometimes on really bad inputs
-	// I can't seem to reproduce this - but we protect for it anyways
+	// I can't seem to reproduce this - but we try to protect against it anyways
 	expression, err := util.RecoverFromPanicWithError(
 		func() (*Expression, error) { return calculator.parser.Parse(input) },
 		nil, errors.New(PARSING_OR_LEXING_PANIC_ERROR_ID), "Recovered from parsing panic")
