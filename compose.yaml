@@ -7,12 +7,15 @@ services:
       - 8089:80
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd
+    restart: always
 
   backend:
     image: over-engineered-calculator-backend
     build: backend
     ports:
       - '8080:8080'
+    restart: always
 
   db:
     image: postgres:17-alpine
@@ -34,5 +37,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 9999:8080
+    command: --base /dozzle
+    
 
       
