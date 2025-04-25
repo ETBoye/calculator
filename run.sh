@@ -1,4 +1,11 @@
 set -e
+
+if [ $(which docker-compose) = "" ];then
+    DOCKER_COMPOSE_COMMAND="docker compose"
+else
+    DOCKER_COMPOSE_COMMAND="docker-compose"
+fi
+
 if [ -z "${POSTGRES_USER}" ]; then
     echo "You need to set the POSTGRES_USER environment variable to run the application"
     exit
@@ -16,5 +23,5 @@ then
     exit
 fi
 
-docker-compose down
-docker-compose up
+$DOCKER_COMPOSE_COMMAND down
+$DOCKER_COMPOSE_COMMAND up
