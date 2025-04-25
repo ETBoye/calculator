@@ -29,7 +29,7 @@ func (calculator ExpressionCalculator) Compute(input CalculationInput) Calculati
 	// I can't seem to reproduce this - but we protect for it anyways
 	expression, err := util.RecoverFromPanicWithError(
 		func() (*Expression, error) { return calculator.parser.Parse(input) },
-		nil, errors.New(PARSING_ERROR_ID), "Recovered from parsing panic")
+		nil, errors.New(PARSING_OR_LEXING_PANIC_ERROR_ID), "Recovered from parsing panic")
 
 	if err != nil {
 		errorId := err.Error()

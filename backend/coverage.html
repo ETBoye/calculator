@@ -168,7 +168,7 @@ func (calculator ExpressionCalculator) Compute(input CalculationInput) Calculati
         // I can't seem to reproduce this - but we protect for it anyways
         expression, err := util.RecoverFromPanicWithError(
                 func() (*Expression, error) </span><span class="cov8" title="1">{ return calculator.parser.Parse(input) }</span>,
-                nil, errors.New(PARSING_ERROR_ID), "Recovered from parsing panic")
+                nil, errors.New(PARSING_OR_LEXING_PANIC_ERROR_ID), "Recovered from parsing panic")
 
         <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
                 errorId := err.Error()
@@ -565,7 +565,6 @@ type withError[T any] struct {
 }
 
 func RecoverFromPanicWithError[T any](f func() (T, error), recoverItem T, recoverError error, recoverMessage string) (T, error) <span class="cov8" title="1">{
-
         resultWithError := RecoverFromPanic[withError[T]](func() withError[T] </span><span class="cov8" title="1">{
                 t, err := f()
 

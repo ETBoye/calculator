@@ -8,7 +8,6 @@ type withError[T any] struct {
 }
 
 func RecoverFromPanicWithError[T any](f func() (T, error), recoverItem T, recoverError error, recoverMessage string) (T, error) {
-
 	resultWithError := RecoverFromPanic[withError[T]](func() withError[T] {
 		t, err := f()
 
