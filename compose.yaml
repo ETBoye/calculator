@@ -16,6 +16,8 @@ services:
     ports:
       - '8080:8080'
     restart: always
+    environment:
+      - GIN_MODE=${GIN_MODE}
 
   db:
     image: postgres:17-alpine
