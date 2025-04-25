@@ -1,9 +1,11 @@
+#!/bin/sh
+
 set -e
 
-if [ $(which docker-compose) = "" ];then
-    DOCKER_COMPOSE_COMMAND="docker compose"
-else
+if command -v docker-compose 2>&1 >/dev/null;then
     DOCKER_COMPOSE_COMMAND="docker-compose"
+else
+    DOCKER_COMPOSE_COMMAND="docker compose"
 fi
 
 if [ -z "${POSTGRES_USER}" ]; then

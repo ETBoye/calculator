@@ -1,8 +1,8 @@
-
-if [ $(which docker-compose) = "" ];then
-    DOCKER_COMPOSE_COMMAND="docker compose"
-else
+#!/bin/sh
+if command -v docker-compose 2>&1 >/dev/null;then
     DOCKER_COMPOSE_COMMAND="docker-compose"
+else
+    DOCKER_COMPOSE_COMMAND="docker compose"
 fi
 
 
