@@ -1,0 +1,424 @@
+{
+	"info": {
+		"_postman_id": "ac4c593f-b4f3-482e-a58c-7186a3c88c83",
+		"name": "Calculator",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8147562"
+	},
+	"item": [
+		{
+			"name": "compute",
+			"item": [
+				{
+					"name": "2xx",
+					"item": [
+						{
+							"name": "Compute - simple success",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"input\": \"1+2\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/test/compute",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"test",
+										"compute"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Division by zero",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"input\": \"1/0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/test/compute",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"test",
+										"compute"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "4xx",
+					"item": [
+						{
+							"name": "Compute - Missing input",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/test/compute",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"test",
+										"compute"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Session id empty",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"input\": \"1/0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions//compute",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"",
+										"compute"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Session id not matching regex",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"input\": \"1/0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/æøå/compute",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"æøå",
+										"compute"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Session id too long",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"input\": \"1/0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/compute",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+										"compute"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "history",
+			"item": [
+				{
+					"name": "2xx",
+					"item": [
+						{
+							"name": "Get History - empty cursor",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/init-db-data-session/history",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"init-db-data-session",
+										"history"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get History - empty cursor, empty list Copy",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/this-session-id-should-not-have-stored-any-calculations/history",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"this-session-id-should-not-have-stored-any-calculations",
+										"history"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get History - empty cursor Copy",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/test/history",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"test",
+										"history"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "4xx",
+					"item": [
+						{
+							"name": "Session id empty",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"input\": \"1/0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions//history",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"",
+										"history"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Session id not matching regex Copy",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"input\": \"1/0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/æøå/history",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"æøå",
+										"history"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Session id too long Copy",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"input\": \"1/0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/history",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+										"history"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Cursor query not int",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"input\": \"1/0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/sessions/test/history?cursor=asfdasdf",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"sessions",
+										"test",
+										"history"
+									],
+									"query": [
+										{
+											"key": "cursor",
+											"value": "asfdasdf"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "https://calculator.etboye.dk/api",
+			"type": "string"
+		}
+	]
+}

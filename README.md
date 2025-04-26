@@ -12,8 +12,8 @@ You can test the whole application by using docker-compose by running
 `POSTGRES_USER=user POSTGRES_PASSWORD=secret APP_ENV=test ./run.sh`
 
 This exposes
- - The whole application as it will run on the website on  `http://localhost:8089`
-	 - Note that for example `POST http://localhost:8089/api/compute` is proxied to the backend as `POST /compute`
+ - The whole application as it will be deployed on `http://localhost:8089`
+	 - Note that requests `http://localhost:8089/api/:restofurl` is proxied to the backend as `/:restofurl`
  - Dozzle on `http://localhost:8089/dozzle`
  - The backend on `http://localhost:8080`
 

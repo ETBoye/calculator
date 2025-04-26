@@ -2,6 +2,8 @@
 
 import { KeyboardEventHandler, useEffect, useState } from "react";
 import { v4 } from "uuid"
+import styles from './page.module.css'; 
+import { MathJax } from "better-react-mathjax";
 
 const SESSION_ID_KEY = "session-id";
 
@@ -46,13 +48,26 @@ type HistoryResponse = {
 }
 
 function Result({calculationResult} : {calculationResult: CalculationResult}) {
+
+  function  getMathJaxString() {
+
+    if (!calculationResult.result) {
+      return "";
+    }
+
+    if (calculationResult.result.denom === "1") {
+      return `\\[${calculationResult.result.num}\\]`
+    }
+    
+    return  `\\[\\frac{${calculationResult.result.num}}{${calculationResult.result.denom}}  \\approx ${calculationResult.result.estimate}\\]`;
+  }
   return (
-    <>
-      {
-        calculationResult.errorId ? <p>{calculationResult.errorId}</p>
-        : <p>{calculationResult.result!.num}/{calculationResult.result!.denom} = {calculationResult.result!.estimate}</p>
-      }
-    </>
+      <div className={styles.center}>
+        {
+          calculationResult.errorId ? <p>{calculationResult.errorId}</p> 
+          : <MathJax>{getMathJaxString()}</MathJax> 
+        }
+        </div>
   )
 }
 
@@ -60,54 +75,87 @@ function SessionIdTool({onChangeSessionId, sessionId}:
   {onChangeSessionId: (newSessionId: string) => void, sessionId: string}) {
   const [sessionIdInputValue, setSessionIdInputValue] = useState<string>("");
 
+  function onKeyUp(e: any) {
+    if (e && e.key == 'Enter') {
+      onChangeSessionId(sessionIdInputValue);
+    }
+  }
 
   return (
-    <>
-    <p> Current session id: {sessionId} </p>
+    <div className={styles.gridCard}>
+    <h2>Change session id</h2>
     <div>
-      <p> Change session id: </p>
-      <input value={sessionIdInputValue} onChange={ e => setSessionIdInputValue(e.currentTarget.value)}></input>
+      <input value={sessionIdInputValue} onChange={ e => setSessionIdInputValue(e.currentTarget.value)} onKeyUp={onKeyUp}></input>
       <button onClick={() => onChangeSessionId(sessionIdInputValue)}>Change</button>
     </div>
-    </>
+    </div>
   )
 }
 
-function HistorySection({historyData, onFetchNextHistoryPage}: 
-  {historyData: HistoryData, onFetchNextHistoryPage: () => Promise<void>}) {
+function InfoCard() {
   return (
-    <>
-    <table>
-          
-          <thead>
-          <tr>
-            <th>Input</th>
-            <th>Result</th>
-          </tr>
-          </thead>
-          <tbody>
-          {
-            historyData.items.map( item => 
-              <tr key={item.calculationId}>
-                <td>{item.calculation.input}</td>
+    <div className={styles.gridCard}>
+      <h2> Info </h2>
+      <p>This is a calculator for computing expressions with rational numbers.</p>
+      You can input
+      <ul>
+        <li> Integer constants, eg. 3, 5, 0, -0, -432</li>
+        <li> The usual 4 operations, eg. 3+4, 4-2, 3*2, 5/2</li>
+        <li> Any expressions of the above using brackets, eg. (4+3)*2/(5-2)</li>
+      </ul>
+      You <strong>can not</strong> input 
+      <ul>
+        <li> The unary operator '-' when not used in the context of a negative constant, eg. -(2+3), --5</li>
+        <li> Any decimal representation of numbers, eg. 3.14, 100,00</li>
+      </ul>
 
-                <td>
-                  <Result calculationResult={item.calculation}></Result>
-                </td>
-              </tr>
-            )
-          }
-          </tbody>
-        </table>
+      <p>The calculator respects the order of operations an multiplication and division is evaluated left to right. For instance,</p>
+      <p>3*4/2*5 = ((3*4)/2)*5</p>
+      
+    </div>
+  )
+}
+
+
+function HistorySection({historyData, onFetchNextHistoryPage, sessionId}: 
+  {historyData: HistoryData, onFetchNextHistoryPage: () => Promise<void>, sessionId: string}) {
+  return (
+    <div className={`${styles.historySection} ${styles.gridCard}`}>
+      <h2>History</h2>
+      <p>Session id: {sessionId}</p>
+      <table className={styles.historyTable}>
+            
+        <thead>
+        <tr>
+          <th>Input</th>
+          <th>Output</th>
+        </tr>
+        </thead>
+        <tbody>
         {
-          historyData.nextUrl ? <button onClick={() => onFetchNextHistoryPage()}>Fetch more..</button> : null
+          historyData.items.map( item => 
+            <tr key={item.calculationId} className={styles.historyRow}>
+              <td style={{textAlign: 'center'}}>{item.calculation.input}</td>
+
+              <td style={{textAlign: 'center'}}>
+                <Result calculationResult={item.calculation}></Result>
+              </td>
+            </tr>
+          )
         }
-    </>
+        </tbody>
+      </table>
+      {
+        historyData.nextUrl ? <button onClick={() => onFetchNextHistoryPage()}>Fetch more..</button> : null
+      }
+    </div>
   )
 }
 
 function InputSection({onCalculate, currentResult}: 
   {onCalculate: (input: string) => Promise<void>, currentResult?: CalculationResult | null}) {
+
+  console.log("Current result!", currentResult)
   const [calculationInputValue, setCalculationInputValue] = useState<string>("");
 
   function onKeyUp(e: any) {
@@ -118,15 +166,21 @@ function InputSection({onCalculate, currentResult}:
 
   return (
     <>
-     <div style={{marginTop: '100px'}}>
-        
-        <input placeholder="1+(3+4)" 
-          value={calculationInputValue} 
-          onChange={ e => setCalculationInputValue(e.currentTarget.value)} 
-          onKeyUp={(e) => onKeyUp(e)}></input>
-        <button onClick={() => onCalculate(calculationInputValue)}>Calculate!</button>
-        { currentResult ? <Result calculationResult={currentResult}></Result> : null}
-        
+
+  
+     <div className={`${styles.inputSection} ${styles.gridCard}`}>
+        <h2 >Input</h2>
+        <div className={styles.inputMain}>
+          <div className={styles.inputForm}>
+            <input placeholder="1+(3+4)" 
+              value={calculationInputValue} 
+              onChange={ e => setCalculationInputValue(e.currentTarget.value)} 
+              onKeyUp={(e) => onKeyUp(e)}></input>
+            <button onClick={() => onCalculate(calculationInputValue)}>Calculate!</button>
+
+          </div>  
+          { currentResult ? <Result calculationResult={currentResult}></Result> : null}
+        </div>
     </div>
     </>
   )
@@ -170,6 +224,7 @@ export default function Home() {
     }
     changeSessionId(sessionId)
   }, [])
+
   
   useEffect(() => {
     if (sessionId != null) {
@@ -200,8 +255,9 @@ export default function Home() {
   }
 
   async function changeSessionId(sessionId: string) {
-    window.localStorage.setItem(SESSION_ID_KEY, sessionId)
-    setSessionId(sessionId)
+    window.localStorage.setItem(SESSION_ID_KEY, sessionId);
+    setSessionId(sessionId);
+    setCurrentResult(null);
   }
 
   async function calculate(input: string) {
@@ -222,16 +278,27 @@ export default function Home() {
 
   return (
     <>
-        <h1>Calculator</h1>
+          <div className={styles.topBar}>
 
-        
-        { sessionId ?         <SessionIdTool onChangeSessionId={changeSessionId} sessionId={sessionId}></SessionIdTool> : null}
-        
-        <InputSection currentResult={currentResult} onCalculate={calculate}></InputSection>
+            <h1 className={styles.header}>Calculator</h1>
+          </div>
 
-    
-        <HistorySection historyData={historyData} onFetchNextHistoryPage={fetchNextHistoryPage}></HistorySection>
-        
+          <main className={styles.main}>
+
+
+              <InputSection currentResult={currentResult} onCalculate={calculate}></InputSection>
+
+              { sessionId ?         <SessionIdTool onChangeSessionId={changeSessionId} sessionId={sessionId}></SessionIdTool> : null}
+             
+
+              {sessionId ? <HistorySection historyData={historyData} onFetchNextHistoryPage={fetchNextHistoryPage} sessionId={sessionId}></HistorySection>: null }
+              
+
+
+            <InfoCard></InfoCard>
+          </main>
+          
+      
         
 
     </>
