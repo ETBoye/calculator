@@ -65,7 +65,7 @@ function Result({calculationResult} : {calculationResult: CalculationResult}) {
       <div className={styles.center}>
         {
           calculationResult.errorId ? <p>{calculationResult.errorId}</p> 
-          : <MathJax>{getMathJaxString()}</MathJax> 
+          : <MathJax inline dynamic>{getMathJaxString()}</MathJax> 
         }
         </div>
   )
@@ -155,7 +155,6 @@ function HistorySection({historyData, onFetchNextHistoryPage, sessionId}:
 function InputSection({onCalculate, currentResult}: 
   {onCalculate: (input: string) => Promise<void>, currentResult?: CalculationResult | null}) {
 
-  console.log("Current result!", currentResult)
   const [calculationInputValue, setCalculationInputValue] = useState<string>("");
 
   function onKeyUp(e: any) {
