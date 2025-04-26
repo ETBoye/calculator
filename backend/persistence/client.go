@@ -16,6 +16,7 @@ var pageMaxNumberOfItems = 5
 var fetchHistoryErrorId = "HISTORY_FETCH"
 var scanRowHistoryError = "HISTORY_SCAN_ROW"
 var computeCursorPositionsError = "HISTORY_CURSOR"
+var insertCalculationError = "INSERT_CALCULATION"
 
 type HistoryRow struct {
 	CalculationId int64                         `json:"calculationId"`
@@ -40,7 +41,7 @@ type CursorPositions struct {
 }
 
 type PersistenceClient interface {
-	SaveComputation(sessionId string, input string, calculationResult calculation.CalculationResult) error
+	SaveComputation(sessionId string, input string, calculationResult calculation.CalculationResult) (HistoryRow, error)
 	GetSessionHistory(sessionId string, cursor int64) (CalculationsPageObject, error)
 	GetSessionHistoryFirstPage(sessionId string) (CalculationsPageObject, error)
 }
@@ -49,18 +50,35 @@ type PostgresClient struct {
 	conn *pgx.Conn
 }
 
-func (postgresClient PostgresClient) SaveComputation(sessionId string, input string, calculationResult calculation.CalculationResult) error {
-	_, err := postgresClient.conn.Exec(context.Background(),
+func (postgresClient PostgresClient) SaveComputation(
+	sessionId string, input string, calculationResult calculation.CalculationResult) (HistoryRow, error) {
+
+	var num, denom, estimate *string
+	if calculationResult.Result != nil {
+		num = &calculationResult.Result.Num
+		denom = &calculationResult.Result.Denom
+		estimate = &calculationResult.Result.Estimate
+	}
+	row := postgresClient.conn.QueryRow(context.Background(),
 		`INSERT INTO history (sessionId, input, outputNum, outputDenom, outputEstimate, error) VALUES 
-		($1, $2, $3, $4, $5, $6);`,
+		($1, $2, $3, $4, $5, $6) returning calculationId`,
 		sessionId,
 		input,
-		calculationResult.Result.Num,
-		calculationResult.Result.Denom,
-		calculationResult.Result.Estimate,
+		num, denom, estimate,
 		calculationResult.ErrorId,
 	)
-	return err
+
+	var createdCalculationId int64
+	err := row.Scan(&createdCalculationId)
+
+	if err != nil {
+		return HistoryRow{}, errors.New(insertCalculationError)
+	}
+
+	return HistoryRow{
+		CalculationId: createdCalculationId,
+		Calculation:   calculationResult,
+	}, nil
 }
 
 func scanHistoryRow(rows pgx.Rows) (HistoryRow, error) {
@@ -128,7 +146,13 @@ func (postgresClient PostgresClient) computeCursorPositions(sessionId string, cu
 
 	first := calculationIds[0]
 
-	idxOfLast := pageMaxNumberOfItems * (len(calculationIds) / pageMaxNumberOfItems)
+	var idxOfLast int
+	if len(calculationIds)%pageMaxNumberOfItems == 0 {
+		idxOfLast = len(calculationIds) - pageMaxNumberOfItems
+	} else {
+		idxOfLast = pageMaxNumberOfItems * (len(calculationIds) / pageMaxNumberOfItems)
+	}
+
 	last := calculationIds[idxOfLast]
 
 	idxOfCurrent := 0
@@ -290,5 +314,9 @@ func getDatabaseUrl() string {
 	username := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
 
-	return fmt.Sprintf("postgres://%s:%s@localhost:5432/over-engineered-calculator", username, password)
+	host := os.Getenv("POSTGRES_HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	return fmt.Sprintf("postgres://%s:%s@%s:5432/over-engineered-calculator", username, password, host)
 }

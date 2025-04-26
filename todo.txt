@@ -26,3 +26,9 @@ Gå igennem log statements
 index på history tabel!
 
 Tjek json-igennem. Der skal være keys på det hele, ellers får man stort forbogstav
+
+calculationId til string?
+
+basic error handling i frontend
+
+X-forward nginx

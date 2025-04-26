@@ -13,8 +13,8 @@ type ComputeRequest struct {
 }
 
 type ComputeResponse struct {
-	CalculationResult *calculation.CalculationResult `json:"calculationResult"`
-	Error             *string                        `json:"error"`
+	HistoryRow *persistence.HistoryRow `json:"historyRow"`
+	Error      *string                 `json:"error"`
 }
 
 type ComputationHandler interface {
@@ -58,7 +58,7 @@ func (c StandardComputationHandler) Compute(sessionId string, computeRequest Com
 
 	calculationResult := c.calculator.Compute(input)
 
-	persistenceError := c.persistenceClient.SaveComputation(sessionId, input, calculationResult)
+	historyRow, persistenceError := c.persistenceClient.SaveComputation(sessionId, input, calculationResult)
 
 	if persistenceError != nil {
 		errorId := persistenceError.Error()
@@ -71,7 +71,7 @@ func (c StandardComputationHandler) Compute(sessionId string, computeRequest Com
 	return SimpleHttpResponse[ComputeResponse]{
 		Status: http.StatusCreated,
 		Response: ComputeResponse{
-			CalculationResult: &calculationResult,
+			HistoryRow: &historyRow,
 		},
 	}
 }
