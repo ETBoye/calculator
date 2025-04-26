@@ -61,21 +61,23 @@
 				
 				<option value="file2">github.com/etboye/calculator/api/validation.go (0.0%)</option>
 				
-				<option value="file3">github.com/etboye/calculator/calculation/expressioncalculator.go (100.0%)</option>
+				<option value="file3">github.com/etboye/calculator/calculation/ast.go (8.7%)</option>
 				
-				<option value="file4">github.com/etboye/calculator/calculation/expressionmodel.go (8.7%)</option>
+				<option value="file4">github.com/etboye/calculator/calculation/calculator.go (100.0%)</option>
 				
-				<option value="file5">github.com/etboye/calculator/calculation/expressionmodeleval.go (100.0%)</option>
+				<option value="file5">github.com/etboye/calculator/calculation/eval.go (100.0%)</option>
 				
-				<option value="file6">github.com/etboye/calculator/calculation/expressionparser.go (100.0%)</option>
+				<option value="file6">github.com/etboye/calculator/calculation/parser.go (100.0%)</option>
 				
 				<option value="file7">github.com/etboye/calculator/main.go (0.0%)</option>
 				
-				<option value="file8">github.com/etboye/calculator/persistence/postgresclient.go (0.0%)</option>
+				<option value="file8">github.com/etboye/calculator/persistence/pagination.go (0.0%)</option>
 				
-				<option value="file9">github.com/etboye/calculator/server/ginserver.go (0.0%)</option>
+				<option value="file9">github.com/etboye/calculator/persistence/postgresclient.go (0.0%)</option>
 				
-				<option value="file10">github.com/etboye/calculator/util/panicrecover.go (100.0%)</option>
+				<option value="file10">github.com/etboye/calculator/server/ginserver.go (0.0%)</option>
+				
+				<option value="file11">github.com/etboye/calculator/util/panicrecover.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -305,66 +307,6 @@ func validateSessionId(sessionId string) error <span class="cov0" title="0">{
 		<pre class="file" id="file3" style="display: none">package calculation
 
 import (
-        "errors"
-        "log"
-
-        "github.com/etboye/calculator/errorid"
-        "github.com/etboye/calculator/util"
-)
-
-type Parser interface {
-        Parse(input string) (*Expression, error)
-}
-
-type ExpressionCalculator struct {
-        parser Parser
-}
-
-func NewExpressionCalculatorWithParser(parser Parser) ExpressionCalculator <span class="cov8" title="1">{
-        return ExpressionCalculator{parser: parser}
-}</span>
-
-func NewDefaultExpressionCalculator() ExpressionCalculator <span class="cov8" title="1">{
-        parser := newParticipleParser()
-        return ExpressionCalculator{parser: &amp;parser}
-}</span>
-
-func (calculator ExpressionCalculator) Compute(input string) CalculationResult <span class="cov8" title="1">{
-        // I think I've seen the parser panic sometimes on really bad inputs
-        // I can't seem to reproduce this - but we try to protect against it anyways
-        expression, err := util.RecoverFromPanicWithError(
-                func() (*Expression, error) </span><span class="cov8" title="1">{ return calculator.parser.Parse(input) }</span>,
-                nil, errors.New(errorid.PARSING_OR_LEXING_PANIC_ERROR), "Recovered from parsing panic")
-
-        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
-                errorId := err.Error()
-                return CalculationResult{Input: &amp;input, ErrorId: &amp;errorId}
-        }</span>
-
-        <span class="cov8" title="1">resultAsRat, err := expression.Eval()
-
-        if err != nil </span><span class="cov8" title="1">{
-                errorId := err.Error()
-                log.Println("Calculation returned error with id", errorId)
-                return CalculationResult{
-                        Input:   &amp;input,
-                        ErrorId: &amp;errorId,
-                }
-        }</span>
-
-        <span class="cov8" title="1">result := RationalNumber{
-                Num:      resultAsRat.Num().String(),
-                Denom:    resultAsRat.Denom().String(),
-                Estimate: resultAsRat.FloatString(PRECISION_DIGITS),
-        }
-
-        return CalculationResult{Input: &amp;input, Result: &amp;result}</span>
-}
-</pre>
-		
-		<pre class="file" id="file4" style="display: none">package calculation
-
-import (
         "fmt"
         "strings"
 )
@@ -462,6 +404,78 @@ func (e *Expression) String() string <span class="cov0" title="0">{
 }
 </pre>
 		
+		<pre class="file" id="file4" style="display: none">package calculation
+
+import (
+        "errors"
+        "log"
+
+        "github.com/etboye/calculator/errorid"
+        "github.com/etboye/calculator/util"
+)
+
+type RationalNumber struct {
+        Num      string `json:"num"`
+        Denom    string `json:"denom"`
+        Estimate string `json:"estimate"`
+}
+
+type CalculationResult struct {
+        Input   *string         `json:"input"`
+        Result  *RationalNumber `json:"result"`
+        ErrorId *string         `json:"errorId"`
+}
+
+type Calculator interface {
+        Compute(input string) CalculationResult
+}
+
+type ExpressionCalculator struct {
+        parser parser
+}
+
+func NewExpressionCalculatorWithParser(parser parser) ExpressionCalculator <span class="cov8" title="1">{
+        return ExpressionCalculator{parser: parser}
+}</span>
+
+func NewDefaultExpressionCalculator() ExpressionCalculator <span class="cov8" title="1">{
+        parser := newParticipleParser()
+        return ExpressionCalculator{parser: &amp;parser}
+}</span>
+
+func (calculator ExpressionCalculator) Compute(input string) CalculationResult <span class="cov8" title="1">{
+        // I think I've seen the parser panic sometimes on really bad inputs
+        // I can't seem to reproduce this - but we try to protect against it anyways
+        expression, err := util.RecoverFromPanicWithError(
+                func() (*Expression, error) </span><span class="cov8" title="1">{ return calculator.parser.Parse(input) }</span>,
+                nil, errors.New(errorid.PARSING_OR_LEXING_PANIC_ERROR), "Recovered from parsing panic")
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                errorId := err.Error()
+                return CalculationResult{Input: &amp;input, ErrorId: &amp;errorId}
+        }</span>
+
+        <span class="cov8" title="1">resultAsRat, err := expression.Eval()
+
+        if err != nil </span><span class="cov8" title="1">{
+                errorId := err.Error()
+                log.Println("Calculation returned error with id", errorId)
+                return CalculationResult{
+                        Input:   &amp;input,
+                        ErrorId: &amp;errorId,
+                }
+        }</span>
+
+        <span class="cov8" title="1">result := RationalNumber{
+                Num:      resultAsRat.Num().String(),
+                Denom:    resultAsRat.Denom().String(),
+                Estimate: resultAsRat.FloatString(PRECISION_DIGITS),
+        }
+
+        return CalculationResult{Input: &amp;input, Result: &amp;result}</span>
+}
+</pre>
+		
 		<pre class="file" id="file5" style="display: none">package calculation
 
 import (
@@ -471,6 +485,8 @@ import (
 
         "github.com/etboye/calculator/errorid"
 )
+
+const PRECISION_DIGITS = 5
 
 // precondition: digitStringWithSign matches `-\d+`
 func ratFromIntegerString(digitStringWithSign string) *big.Rat <span class="cov8" title="1">{
@@ -567,10 +583,35 @@ import (
         "github.com/etboye/calculator/errorid"
 )
 
+type parser interface { // TODO private
+        Parse(input string) (*Expression, error)
+}
+
 type participleParser struct {
         parser        *participle.Parser[Expression]
         lexingSymbols map[lexer.TokenType]string
 }
+
+func newParticipleParser() participleParser <span class="cov8" title="1">{
+        var myLexer = lexer.MustSimple([]lexer.SimpleRule{
+                {Name: "UnsignedInteger", Pattern: `\d+`},
+                {Name: "OpAdd", Pattern: `\+`},
+                {Name: "OpSub", Pattern: `-`},
+                {Name: "OpMul", Pattern: `\*`},
+                {Name: "OpQuo", Pattern: `/`},
+                {Name: "StartParen", Pattern: `\(`},
+                {Name: "EndParen", Pattern: `\)`},
+                {Name: "WhiteSpace", Pattern: `[\s]*`},
+        })
+
+        parser := participle.MustBuild[Expression](
+                participle.Lexer(myLexer),
+                participle.Elide("WhiteSpace"), // The parser should ignore any whitespace
+
+        )
+
+        return participleParser{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
+}</span>
 
 func (parser *participleParser) Parse(input string) (*Expression, error) <span class="cov8" title="1">{
         if len(strings.TrimSpace(input)) == 0 </span><span class="cov8" title="1">{
@@ -598,27 +639,6 @@ func (parser *participleParser) Parse(input string) (*Expression, error) <span c
         <span class="cov8" title="1">log.Printf("Parsing succesful. Has parsed to %s", expression)
         return expression, nil</span>
 }
-
-func newParticipleParser() participleParser <span class="cov8" title="1">{
-        var myLexer = lexer.MustSimple([]lexer.SimpleRule{
-                {Name: "UnsignedInteger", Pattern: `\d+`},
-                {Name: "OpAdd", Pattern: `\+`},
-                {Name: "OpSub", Pattern: `-`},
-                {Name: "OpMul", Pattern: `\*`},
-                {Name: "OpQuo", Pattern: `/`},
-                {Name: "StartParen", Pattern: `\(`},
-                {Name: "EndParen", Pattern: `\)`},
-                {Name: "WhiteSpace", Pattern: `[\s]*`},
-        })
-
-        parser := participle.MustBuild[Expression](
-                participle.Lexer(myLexer),
-                participle.Elide("WhiteSpace"), // The parser should ignore any whitespace
-
-        )
-
-        return participleParser{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
-}</span>
 
 func logLexingResult(input string, tokens []lexer.Token, lexingSymbols map[lexer.TokenType]string) <span class="cov8" title="1">{
         var sb strings.Builder
@@ -671,31 +691,8 @@ func main() <span class="cov0" title="0">{
 
 import (
         "context"
-        "errors"
-        "fmt"
         "log"
-        "os"
-
-        "github.com/etboye/calculator/calculation"
-        "github.com/etboye/calculator/errorid"
-        "github.com/jackc/pgx/v5"
 )
-
-var pageMaxNumberOfItems = 5
-
-type HistoryRow struct {
-        CalculationId int64                         `json:"calculationId"`
-        Calculation   calculation.CalculationResult `json:"calculation"`
-}
-
-type CalculationsPageObject struct { // Page as in pagination object, not web page
-        Self  *int64
-        First *int64
-        Prev  *int64
-        Next  *int64
-        Last  *int64
-        Items []HistoryRow
-}
 
 type cursorPositions struct {
         Self  *int64
@@ -704,94 +701,6 @@ type cursorPositions struct {
         Next  *int64
         Last  *int64
 }
-
-type PersistenceClient interface {
-        SaveComputation(sessionId string, input string, calculationResult calculation.CalculationResult) (HistoryRow, error)
-        GetSessionHistory(sessionId string, cursor int64) (CalculationsPageObject, error)
-        GetSessionHistoryFirstPage(sessionId string) (CalculationsPageObject, error)
-}
-
-type PostgresClient struct {
-        conn *pgx.Conn
-}
-
-func (postgresClient PostgresClient) SaveComputation(
-        sessionId string, input string, calculationResult calculation.CalculationResult) (HistoryRow, error) <span class="cov0" title="0">{
-
-        var num, denom, estimate *string
-        if calculationResult.Result != nil </span><span class="cov0" title="0">{
-                num = &amp;calculationResult.Result.Num
-                denom = &amp;calculationResult.Result.Denom
-                estimate = &amp;calculationResult.Result.Estimate
-        }</span>
-        <span class="cov0" title="0">row := postgresClient.conn.QueryRow(context.Background(),
-                `INSERT INTO history (sessionId, input, outputNum, outputDenom, outputEstimate, error) VALUES 
-                ($1, $2, $3, $4, $5, $6) returning calculationId`,
-                sessionId,
-                input,
-                num, denom, estimate,
-                calculationResult.ErrorId,
-        )
-
-        var createdCalculationId int64
-        err := row.Scan(&amp;createdCalculationId)
-
-        if err != nil </span><span class="cov0" title="0">{
-                return HistoryRow{}, errors.New(errorid.INSERT_CALCULATION_ERROR)
-        }</span>
-
-        <span class="cov0" title="0">return HistoryRow{
-                CalculationId: createdCalculationId,
-                Calculation:   calculationResult,
-        }, nil</span>
-}
-
-func scanHistoryRow(rows pgx.Rows) (HistoryRow, error) <span class="cov0" title="0">{
-        var calculationId int64
-        var input string
-        var outputnum *string
-        var outputdenom *string
-        var outputestimate *string
-        var error *string
-
-        err := rows.Scan(&amp;calculationId, &amp;input, &amp;outputnum, &amp;outputdenom, &amp;outputestimate, &amp;error)
-
-        if err != nil </span><span class="cov0" title="0">{
-                return HistoryRow{}, err
-        }</span>
-
-        <span class="cov0" title="0">var rationalNumber *calculation.RationalNumber = nil
-
-        if outputnum != nil &amp;&amp; outputdenom != nil &amp;&amp; outputestimate != nil </span><span class="cov0" title="0">{
-                rat := calculation.RationalNumber{
-                        Num:      *outputnum,
-                        Denom:    *outputdenom,
-                        Estimate: *outputestimate,
-                }
-
-                rationalNumber = &amp;rat
-        }</span>
-
-        <span class="cov0" title="0">return HistoryRow{
-                CalculationId: calculationId,
-                Calculation: calculation.CalculationResult{
-                        Input:   &amp;input,
-                        Result:  rationalNumber,
-                        ErrorId: error,
-                },
-        }, err</span>
-}
-
-func buildCalculationsPageObject(cursorPositions cursorPositions, items []HistoryRow) CalculationsPageObject <span class="cov0" title="0">{
-        return CalculationsPageObject{
-                Self:  cursorPositions.Self,
-                First: cursorPositions.First,
-                Prev:  cursorPositions.Prev,
-                Next:  cursorPositions.Next,
-                Last:  cursorPositions.Last,
-                Items: items,
-        }
-}</span>
 
 func (postgresClient PostgresClient) computeCursorPositions(sessionId string, currentCursorOrNil *int64) (cursorPositions, error) <span class="cov0" title="0">{
         calculationIds, err := postgresClient.getAllCalculationIdsInSessionInDescendingOrder(sessionId)
@@ -907,6 +816,105 @@ func (postgresClient PostgresClient) getAllCalculationIdsInSessionInDescendingOr
         <span class="cov0" title="0">return result, nil</span>
 }
 
+func buildCalculationsPageObject(cursorPositions cursorPositions, items []HistoryRow) CalculationsPageObject <span class="cov0" title="0">{
+        return CalculationsPageObject{
+                Self:  cursorPositions.Self,
+                First: cursorPositions.First,
+                Prev:  cursorPositions.Prev,
+                Next:  cursorPositions.Next,
+                Last:  cursorPositions.Last,
+                Items: items,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package persistence
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "log"
+        "os"
+
+        "github.com/etboye/calculator/calculation"
+        "github.com/etboye/calculator/errorid"
+        "github.com/jackc/pgx/v5"
+)
+
+var pageMaxNumberOfItems = 5
+
+type PostgresClient struct {
+        conn *pgx.Conn
+}
+
+func (postgresClient PostgresClient) SaveComputation(
+        sessionId string, input string, calculationResult calculation.CalculationResult) (HistoryRow, error) <span class="cov0" title="0">{
+
+        var num, denom, estimate *string
+        if calculationResult.Result != nil </span><span class="cov0" title="0">{
+                num = &amp;calculationResult.Result.Num
+                denom = &amp;calculationResult.Result.Denom
+                estimate = &amp;calculationResult.Result.Estimate
+        }</span>
+        <span class="cov0" title="0">row := postgresClient.conn.QueryRow(context.Background(),
+                `INSERT INTO history (sessionId, input, outputNum, outputDenom, outputEstimate, error) VALUES 
+                ($1, $2, $3, $4, $5, $6) returning calculationId`,
+                sessionId,
+                input,
+                num, denom, estimate,
+                calculationResult.ErrorId,
+        )
+
+        var createdCalculationId int64
+        err := row.Scan(&amp;createdCalculationId)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return HistoryRow{}, errors.New(errorid.INSERT_CALCULATION_ERROR)
+        }</span>
+
+        <span class="cov0" title="0">return HistoryRow{
+                CalculationId: createdCalculationId,
+                Calculation:   calculationResult,
+        }, nil</span>
+}
+
+func scanHistoryRow(rows pgx.Rows) (HistoryRow, error) <span class="cov0" title="0">{
+        var calculationId int64
+        var input string
+        var outputnum *string
+        var outputdenom *string
+        var outputestimate *string
+        var error *string
+
+        err := rows.Scan(&amp;calculationId, &amp;input, &amp;outputnum, &amp;outputdenom, &amp;outputestimate, &amp;error)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return HistoryRow{}, err
+        }</span>
+
+        <span class="cov0" title="0">var rationalNumber *calculation.RationalNumber = nil
+
+        if outputnum != nil &amp;&amp; outputdenom != nil &amp;&amp; outputestimate != nil </span><span class="cov0" title="0">{
+                rat := calculation.RationalNumber{
+                        Num:      *outputnum,
+                        Denom:    *outputdenom,
+                        Estimate: *outputestimate,
+                }
+
+                rationalNumber = &amp;rat
+        }</span>
+
+        <span class="cov0" title="0">return HistoryRow{
+                CalculationId: calculationId,
+                Calculation: calculation.CalculationResult{
+                        Input:   &amp;input,
+                        Result:  rationalNumber,
+                        ErrorId: error,
+                },
+        }, err</span>
+}
+
 func (postgresClient PostgresClient) GetSessionHistoryFirstPage(sessionId string) (CalculationsPageObject, error) <span class="cov0" title="0">{
         cursorPositions, err := postgresClient.computeCursorPositions(sessionId, nil)
 
@@ -984,7 +992,7 @@ func getDatabaseUrl() string <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package server
+		<pre class="file" id="file10" style="display: none">package server
 
 import (
         "bytes"
@@ -1065,7 +1073,7 @@ func sendSimpleHttpResponse[T any](c *gin.Context, httpResponse api.SimpleHttpRe
 }</span>
 </pre>
 		
-		<pre class="file" id="file10" style="display: none">package util
+		<pre class="file" id="file11" style="display: none">package util
 
 import "fmt"
 

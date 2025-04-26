@@ -11,9 +11,34 @@ import (
 	"github.com/etboye/calculator/errorid"
 )
 
+type parser interface { // TODO private
+	Parse(input string) (*Expression, error)
+}
+
 type participleParser struct {
 	parser        *participle.Parser[Expression]
 	lexingSymbols map[lexer.TokenType]string
+}
+
+func newParticipleParser() participleParser {
+	var myLexer = lexer.MustSimple([]lexer.SimpleRule{
+		{Name: "UnsignedInteger", Pattern: `\d+`},
+		{Name: "OpAdd", Pattern: `\+`},
+		{Name: "OpSub", Pattern: `-`},
+		{Name: "OpMul", Pattern: `\*`},
+		{Name: "OpQuo", Pattern: `/`},
+		{Name: "StartParen", Pattern: `\(`},
+		{Name: "EndParen", Pattern: `\)`},
+		{Name: "WhiteSpace", Pattern: `[\s]*`},
+	})
+
+	parser := participle.MustBuild[Expression](
+		participle.Lexer(myLexer),
+		participle.Elide("WhiteSpace"), // The parser should ignore any whitespace
+
+	)
+
+	return participleParser{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
 }
 
 func (parser *participleParser) Parse(input string) (*Expression, error) {
@@ -41,27 +66,6 @@ func (parser *participleParser) Parse(input string) (*Expression, error) {
 
 	log.Printf("Parsing succesful. Has parsed to %s", expression)
 	return expression, nil
-}
-
-func newParticipleParser() participleParser {
-	var myLexer = lexer.MustSimple([]lexer.SimpleRule{
-		{Name: "UnsignedInteger", Pattern: `\d+`},
-		{Name: "OpAdd", Pattern: `\+`},
-		{Name: "OpSub", Pattern: `-`},
-		{Name: "OpMul", Pattern: `\*`},
-		{Name: "OpQuo", Pattern: `/`},
-		{Name: "StartParen", Pattern: `\(`},
-		{Name: "EndParen", Pattern: `\)`},
-		{Name: "WhiteSpace", Pattern: `[\s]*`},
-	})
-
-	parser := participle.MustBuild[Expression](
-		participle.Lexer(myLexer),
-		participle.Elide("WhiteSpace"), // The parser should ignore any whitespace
-
-	)
-
-	return participleParser{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
 }
 
 func logLexingResult(input string, tokens []lexer.Token, lexingSymbols map[lexer.TokenType]string) {

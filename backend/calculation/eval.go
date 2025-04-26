@@ -8,6 +8,8 @@ import (
 	"github.com/etboye/calculator/errorid"
 )
 
+const PRECISION_DIGITS = 5
+
 // precondition: digitStringWithSign matches `-\d+`
 func ratFromIntegerString(digitStringWithSign string) *big.Rat {
 	rat := big.NewRat(1, 1)

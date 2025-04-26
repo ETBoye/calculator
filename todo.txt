@@ -1,3 +1,6 @@
+TODO:
+    omskriv pagination
+
 Fremsøg alle TODOS
 
 
