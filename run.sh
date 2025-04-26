@@ -41,5 +41,15 @@ then
     exit
 fi
 
+$DOCKER_COMPOSE_COMMAND build
 $DOCKER_COMPOSE_COMMAND down
-GIN_MODE=$GIN_MODE $DOCKER_COMPOSE_COMMAND up -d
+
+case $APP_ENV in
+    prod)
+        GIN_MODE=$GIN_MODE $DOCKER_COMPOSE_COMMAND up -d
+        ;;
+    test)
+        GIN_MODE=$GIN_MODE $DOCKER_COMPOSE_COMMAND up
+        ;;
+ 
+esac

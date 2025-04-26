@@ -15,13 +15,13 @@ type participleParser struct {
 	lexingSymbols map[lexer.TokenType]string
 }
 
-func (parser *participleParser) Parse(input CalculationInput) (*Expression, error) {
-	if len(strings.TrimSpace(input.Input)) == 0 {
+func (parser *participleParser) Parse(input string) (*Expression, error) {
+	if len(strings.TrimSpace(input)) == 0 {
 		log.Printf("Received empty input")
 		return nil, errors.New(EMPTY_INPUT_ERROR_ID)
 	}
 
-	tokens, lexerError := parser.parser.Lex("", strings.NewReader(input.Input))
+	tokens, lexerError := parser.parser.Lex("", strings.NewReader(input))
 
 	if lexerError != nil {
 		log.Println("Lexing error thrown:", lexerError.Error())
@@ -31,7 +31,7 @@ func (parser *participleParser) Parse(input CalculationInput) (*Expression, erro
 
 	logLexingResult(input, tokens, parser.lexingSymbols)
 
-	expression, err := parser.parser.ParseString("", input.Input) // This actually lexes again. We accept this..
+	expression, err := parser.parser.ParseString("", input) // This actually lexes again. We accept this..
 
 	if err != nil {
 		log.Println("Parsing error thrown:", err.Error())
@@ -63,10 +63,10 @@ func newParticipleParser() participleParser {
 	return participleParser{parser: parser, lexingSymbols: lexer.SymbolsByRune(myLexer)}
 }
 
-func logLexingResult(input CalculationInput, tokens []lexer.Token, lexingSymbols map[lexer.TokenType]string) {
+func logLexingResult(input string, tokens []lexer.Token, lexingSymbols map[lexer.TokenType]string) {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Lexed input \"%s\". Tokens: ", input.Input))
+	sb.WriteString(fmt.Sprintf("Lexed input \"%s\". Tokens: ", input))
 
 	for _, token := range tokens {
 		sb.WriteString(fmt.Sprintf("%s(%s)", lexingSymbols[token.Type], token.Value))

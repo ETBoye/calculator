@@ -40,7 +40,7 @@ func setupLogging(router *gin.Engine) {
 }
 
 func registerEndpoints(router *gin.Engine, endpoints api.Endpoints) {
-	router.POST("/compute", func(c *gin.Context) {
+	router.POST("/sessions/:sessionid/compute", func(c *gin.Context) {
 		computeRequest := api.ComputeRequest{}
 
 		if unmarshallError := c.ShouldBindBodyWith(&computeRequest, binding.JSON); unmarshallError != nil {
@@ -50,8 +50,16 @@ func registerEndpoints(router *gin.Engine, endpoints api.Endpoints) {
 			return
 		}
 
-		computeResponse := endpoints.ComputationHandler.GetResponse(computeRequest)
+		sessionId := c.Param("sessionid") // TODO: Test empty
+		computeResponse := endpoints.ComputationHandler.Compute(sessionId, computeRequest)
 		sendSimpleHttpResponse(c, computeResponse)
+	})
+
+	router.GET("/sessions/:sessionid/history", func(c *gin.Context) {
+		sessionId := c.Param("sessionid") // TODO: Test empty
+		cursor := c.Query("cursor")
+		response := endpoints.SessionHistoryHandler.GetSessionHistory(sessionId, cursor)
+		sendSimpleHttpResponse(c, response)
 	})
 }
 

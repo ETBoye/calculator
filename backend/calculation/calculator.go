@@ -1,9 +1,5 @@
 package calculation
 
-type CalculationInput struct {
-	Input string
-}
-
 type RationalNumber struct {
 	Num      string
 	Denom    string
@@ -11,10 +7,11 @@ type RationalNumber struct {
 }
 
 type CalculationResult struct {
+	Input   *string
 	Result  *RationalNumber
 	ErrorId *string
 }
 
 type Calculator interface {
-	Compute(input CalculationInput) CalculationResult
+	Compute(input string) CalculationResult
 }

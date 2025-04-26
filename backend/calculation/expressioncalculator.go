@@ -8,7 +8,7 @@ import (
 )
 
 type Parser interface {
-	Parse(calculationInput CalculationInput) (*Expression, error)
+	Parse(input string) (*Expression, error)
 }
 
 type ExpressionCalculator struct {
@@ -24,7 +24,7 @@ func NewDefaultExpressionCalculator() ExpressionCalculator {
 	return ExpressionCalculator{parser: &parser}
 }
 
-func (calculator ExpressionCalculator) Compute(input CalculationInput) CalculationResult {
+func (calculator ExpressionCalculator) Compute(input string) CalculationResult {
 	// I think I've seen the parser panic sometimes on really bad inputs
 	// I can't seem to reproduce this - but we try to protect against it anyways
 	expression, err := util.RecoverFromPanicWithError(
@@ -33,7 +33,7 @@ func (calculator ExpressionCalculator) Compute(input CalculationInput) Calculati
 
 	if err != nil {
 		errorId := err.Error()
-		return CalculationResult{ErrorId: &errorId}
+		return CalculationResult{Input: &input, ErrorId: &errorId}
 	}
 
 	resultAsRat, err := expression.Eval()
@@ -42,6 +42,7 @@ func (calculator ExpressionCalculator) Compute(input CalculationInput) Calculati
 		errorId := err.Error()
 		log.Println("Calculation returned error with id", errorId)
 		return CalculationResult{
+			Input:   &input,
 			ErrorId: &errorId,
 		}
 	}
@@ -52,5 +53,5 @@ func (calculator ExpressionCalculator) Compute(input CalculationInput) Calculati
 		Estimate: resultAsRat.FloatString(PRECISION_DIGITS),
 	}
 
-	return CalculationResult{Result: &result}
+	return CalculationResult{Input: &input, Result: &result}
 }

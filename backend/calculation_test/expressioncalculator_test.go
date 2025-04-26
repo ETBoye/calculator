@@ -12,7 +12,7 @@ import (
 
 type PanickyParser struct{}
 
-func (p PanickyParser) Parse(input calculation.CalculationInput) (*calculation.Expression, error) {
+func (p PanickyParser) Parse(input string) (*calculation.Expression, error) {
 	panic("This is my panic message")
 }
 
@@ -26,7 +26,7 @@ func TestParserPanicRecovery(t *testing.T) {
 	expectedErrorId := "PARSING_OR_LEXING_PANIC"
 
 	calculatorWithPanickyParser := calculation.NewExpressionCalculatorWithParser(PanickyParser{})
-	result := calculatorWithPanickyParser.Compute(calculation.CalculationInput{Input: "1+1"})
+	result := calculatorWithPanickyParser.Compute("1+1")
 
 	if result.ErrorId == nil {
 		t.Errorf("Expected errorId %s, got nil", expectedErrorId)
@@ -140,7 +140,7 @@ func intStringToRat(intString string) *big.Rat {
 
 func assertExpectedError(t *testing.T, calculator calculation.Calculator, inputString string, expectedErrorId string) {
 	t.Run(fmt.Sprintf("Expect input %s to give errorId %s", inputString, expectedErrorId), func(t *testing.T) {
-		calculationResult := calculator.Compute(calculation.CalculationInput{Input: inputString})
+		calculationResult := calculator.Compute(inputString)
 
 		if calculationResult.ErrorId == nil {
 			t.Errorf("Expected calculation error, but there was none")
@@ -155,7 +155,7 @@ func assertExpectedError(t *testing.T, calculator calculation.Calculator, inputS
 
 func assertExpectedOutput(t *testing.T, calculator calculation.Calculator, inputString string, expectedOutput *big.Rat) {
 	t.Run(fmt.Sprintf("Expect input: %s to output rational equal to %s", inputString, expectedOutput.String()), func(t *testing.T) {
-		calculationResult := calculator.Compute(calculation.CalculationInput{Input: inputString})
+		calculationResult := calculator.Compute(inputString)
 
 		if calculationResult.ErrorId != nil {
 			t.Errorf("calculationResult had a non-null error id - expected nil, got %s", *calculationResult.ErrorId)

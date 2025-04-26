@@ -7,5 +7,6 @@ type SimpleHttpResponse[Body any] struct {
 }
 
 type Endpoints struct {
-	ComputationHandler ComputationHandler
+	ComputationHandler    ComputationHandler
+	SessionHistoryHandler SessionHistoryHandler
 }
