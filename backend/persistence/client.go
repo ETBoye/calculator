@@ -318,5 +318,5 @@ func getDatabaseUrl() string {
 	if host == "" {
 		host = "localhost"
 	}
-	return fmt.Sprintf("postgres://%s:%s@%s:5432/over-engineered-calculator", username, password, host)
+	return fmt.Sprintf("postgres://%s:%s@%s:5432/calculator", username, password, host)
 }

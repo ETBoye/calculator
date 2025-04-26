@@ -1,4 +1,4 @@
-# Over-engineered Calculator
+# Calculator
 ## Prerequisites for running the app
 This app uses
  - Docker compose for easy deployment of the different services.

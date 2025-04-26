@@ -82,7 +82,7 @@ function HistorySection({historyData, onFetchNextHistoryPage}:
           <thead>
           <tr>
             <th>Input</th>
-            <th>Resultat</th>
+            <th>Result</th>
           </tr>
           </thead>
           <tbody>
@@ -222,7 +222,7 @@ export default function Home() {
 
   return (
     <>
-        <h1>Over-engineered Calculator</h1>
+        <h1>Calculator</h1>
 
         
         { sessionId ?         <SessionIdTool onChangeSessionId={changeSessionId} sessionId={sessionId}></SessionIdTool> : null}

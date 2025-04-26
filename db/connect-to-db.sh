@@ -9,4 +9,4 @@ if [ -z "${POSTGRES_PASSWORD}" ]; then
 fi
 
 
-psql postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/over-engineered-calculator
+psql postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/calculator

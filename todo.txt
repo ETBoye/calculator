@@ -1,6 +1,11 @@
-logging
+PRIORITERET TODO
+    - Lækker UX, specielt med brøkerne
+    - Skriv note omkring
+        - kommatal
+        - unær minus
 
-postman baseurl
+
+
 Fremsøg alle TODOS
 
 Skriv tekst om PEMDAS
@@ -29,6 +34,5 @@ Tjek json-igennem. Der skal være keys på det hele, ellers får man stort forbo
 
 calculationId til string?
 
-basic error handling i frontend
 
 X-forward nginx

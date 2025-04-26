@@ -11,7 +11,7 @@ services:
     restart: always
 
   backend:
-    image: over-engineered-calculator-backend
+    image: calculator-backend
     build: backend
     ports:
       - '8080:8080'
@@ -31,7 +31,7 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=over-engineered-calculator
+      - POSTGRES_DB=calculator
       - PGUSER=${POSTGRES_USER} # used for the health check below
     ports:
       - '5432:5432'
@@ -46,7 +46,7 @@ services:
       retries: 50
 
   frontend: 
-    image: over-engineered-calculator-frontend
+    image: calculator-frontend
     build: frontend
     ports:
       - '3000:3000'
