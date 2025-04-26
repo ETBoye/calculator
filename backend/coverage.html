@@ -71,7 +71,7 @@
 				
 				<option value="file7">github.com/etboye/calculator/main.go (0.0%)</option>
 				
-				<option value="file8">github.com/etboye/calculator/persistence/client.go (0.0%)</option>
+				<option value="file8">github.com/etboye/calculator/persistence/postgresclient.go (0.0%)</option>
 				
 				<option value="file9">github.com/etboye/calculator/server/ginserver.go (0.0%)</option>
 				
@@ -677,15 +677,11 @@ import (
         "os"
 
         "github.com/etboye/calculator/calculation"
+        "github.com/etboye/calculator/errorid"
         "github.com/jackc/pgx/v5"
 )
 
 var pageMaxNumberOfItems = 5
-
-var fetchHistoryErrorId = "HISTORY_FETCH"
-var scanRowHistoryError = "HISTORY_SCAN_ROW"
-var computeCursorPositionsError = "HISTORY_CURSOR"
-var insertCalculationError = "INSERT_CALCULATION"
 
 type HistoryRow struct {
         CalculationId int64                         `json:"calculationId"`
@@ -741,7 +737,7 @@ func (postgresClient PostgresClient) SaveComputation(
         err := row.Scan(&amp;createdCalculationId)
 
         if err != nil </span><span class="cov0" title="0">{
-                return HistoryRow{}, errors.New(insertCalculationError)
+                return HistoryRow{}, errors.New(errorid.INSERT_CALCULATION_ERROR)
         }</span>
 
         <span class="cov0" title="0">return HistoryRow{
@@ -915,13 +911,9 @@ func (postgresClient PostgresClient) GetSessionHistoryFirstPage(sessionId string
         cursorPositions, err := postgresClient.computeCursorPositions(sessionId, nil)
 
         if err != nil </span><span class="cov0" title="0">{
-                return CalculationsPageObject{}, errors.New(computeCursorPositionsError)
+                return CalculationsPageObject{}, errors.New(errorid.HISTORY_CURSOR_ERROR)
         }</span>
 
-        <span class="cov0" title="0">if cursorPositions.Self == nil </span><span class="cov0" title="0">{
-                // Empty list, send empty list
-                return CalculationsPageObject{Items: []HistoryRow{}}, nil
-        }</span>
         <span class="cov0" title="0">return postgresClient.GetSessionHistoryFromCursor(sessionId, cursorPositions)</span>
 }
 
@@ -929,18 +921,19 @@ func (postgresClient PostgresClient) GetSessionHistory(sessionId string, cursor 
         cursorPositions, err := postgresClient.computeCursorPositions(sessionId, &amp;cursor)
 
         if err != nil </span><span class="cov0" title="0">{
-                return CalculationsPageObject{}, errors.New(computeCursorPositionsError)
+                return CalculationsPageObject{}, errors.New(errorid.HISTORY_CURSOR_ERROR)
         }</span>
 
-        <span class="cov0" title="0">if cursorPositions.Self == nil </span><span class="cov0" title="0">{
-                // Empty list, send empty list
-                return CalculationsPageObject{Items: []HistoryRow{}}, nil
-        }</span>
         <span class="cov0" title="0">return postgresClient.GetSessionHistoryFromCursor(sessionId, cursorPositions)</span>
 }
 
 func (postgresClient PostgresClient) GetSessionHistoryFromCursor(sessionId string, cursorPositions cursorPositions) (CalculationsPageObject, error) <span class="cov0" title="0">{
-        log.Printf("Fetching session history for sessionId %s with cursor %d", sessionId, cursorPositions.Self)
+        if cursorPositions.Self == nil </span><span class="cov0" title="0">{
+                // Empty list, send empty list
+                return CalculationsPageObject{Items: []HistoryRow{}}, nil
+        }</span>
+
+        <span class="cov0" title="0">log.Printf("Fetching session history for sessionId %s with cursor %d", sessionId, cursorPositions.Self)
         rows, err := postgresClient.conn.Query(context.Background(),
                 `SELECT calculationId, input, outputnum, outputdenom, outputestimate, error 
                  FROM HISTORY WHERE sessionId=$1 AND calculationId&lt;=$2 ORDER BY calculationId DESC LIMIT $3`,
@@ -950,7 +943,7 @@ func (postgresClient PostgresClient) GetSessionHistoryFromCursor(sessionId strin
 
         if err != nil </span><span class="cov0" title="0">{
                 log.Printf("GetSessionHistory: Could not SELECT. Error: %s", err.Error())
-                return CalculationsPageObject{}, errors.New(fetchHistoryErrorId)
+                return CalculationsPageObject{}, errors.New(errorid.HISTORY_FETCH_ERROR)
         }</span>
 
         <span class="cov0" title="0">items := make([]HistoryRow, 0, pageMaxNumberOfItems)
@@ -960,7 +953,7 @@ func (postgresClient PostgresClient) GetSessionHistoryFromCursor(sessionId strin
 
                 if err != nil </span><span class="cov0" title="0">{
                         log.Printf("GetSessionHistory: Could not scan. Error: %s", err.Error())
-                        return CalculationsPageObject{}, errors.New(scanRowHistoryError)
+                        return CalculationsPageObject{}, errors.New(errorid.HISTORY_SCAN_ROW_ERROR)
                 }</span>
 
                 <span class="cov0" title="0">items = append(items, calculationsResult)</span>

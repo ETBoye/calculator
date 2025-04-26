@@ -121,10 +121,10 @@ func TestCalculation(t *testing.T) {
 	assertExpectedOutput("(3/5+5432/83)*(-432)*(1+5/(2040*2*2+4))", big.NewRat(-24181645068, 847015))
 
 	// Failures
-	assertExpectedError("1/0", "DIVISION_BY_ZERO")
-	assertExpectedError("(1/0)", "DIVISION_BY_ZERO")   // Triggers different error handling in coverage - at least as of now!
-	assertExpectedError("1*(1/0)", "DIVISION_BY_ZERO") // Triggers different error handling in coverage - at least as of now!
-	assertExpectedError("1+(1/0)", "DIVISION_BY_ZERO") // Triggers different error handling in coverage - at least as of now!
+	assertExpectedError("1/0", errorid.DIVISION_BY_ZERO_ERROR)
+	assertExpectedError("(1/0)", errorid.DIVISION_BY_ZERO_ERROR)   // Triggers different error handling in coverage - at least as of now!
+	assertExpectedError("1*(1/0)", errorid.DIVISION_BY_ZERO_ERROR) // Triggers different error handling in coverage - at least as of now!
+	assertExpectedError("1+(1/0)", errorid.DIVISION_BY_ZERO_ERROR) // Triggers different error handling in coverage - at least as of now!
 
 	// TODO: Test for big output
 }
