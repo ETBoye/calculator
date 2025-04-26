@@ -11,7 +11,7 @@ import (
 	"github.com/etboye/calculator/errorid"
 )
 
-type parser interface { // TODO private
+type parser interface {
 	Parse(input string) (*Expression, error)
 }
 

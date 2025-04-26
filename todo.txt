@@ -1,4 +1,6 @@
 TODO:
+    Skriv dokumentation til api
+
     omskriv pagination
 
 Fremsøg alle TODOS
