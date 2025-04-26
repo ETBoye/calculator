@@ -111,7 +111,8 @@ function InfoCard() {
 
       <p>The calculator respects the order of operations an multiplication and division is evaluated left to right. For instance,</p>
       <p>3*4/2*5 = ((3*4)/2)*5</p>
-      
+
+      <p>The calculator computes the result accurately as a rational number - however, the input and result is stored in a database which restricts the length of the input and output</p>
     </div>
   )
 }
@@ -165,10 +166,8 @@ function InputSection({onCalculate, currentResult}:
 
   return (
     <>
-
-  
      <div className={`${styles.inputSection} ${styles.gridCard}`}>
-        <h2 >Input</h2>
+        <h2>Input</h2>
         <div className={styles.inputMain}>
           <div className={styles.inputForm}>
             <input placeholder="1+(3+4)" 

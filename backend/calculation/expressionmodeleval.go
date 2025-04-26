@@ -4,6 +4,8 @@ import (
 	"errors"
 	"math/big"
 	"strings"
+
+	"github.com/etboye/calculator/errorid"
 )
 
 // precondition: digitStringWithSign matches `-\d+`
@@ -39,7 +41,7 @@ func (t *Term) Eval() (*big.Rat, error) {
 			result.Mul(result, factorEval)
 		} else {
 			if factorEval.Cmp(big.NewRat(0, 1)) == 0 {
-				return big.NewRat(1, 1), errors.New(DIVISION_BY_ZERO_ERROR_ID)
+				return big.NewRat(1, 1), errors.New(errorid.DIVISION_BY_ZERO_ERROR)
 			}
 
 			result.Quo(result, factorEval) // TODO: Zero division and test for the same

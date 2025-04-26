@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/etboye/calculator/calculation"
+	"github.com/etboye/calculator/errorid"
 	"github.com/etboye/calculator/persistence"
 )
 
@@ -20,8 +21,6 @@ type ComputeResponse struct {
 type ComputationHandler interface {
 	Compute(sessionId string, computeRequest ComputeRequest) SimpleHttpResponse[ComputeResponse]
 }
-
-var EMPTY_INPUT_ERROR string = "Input was empty"
 
 type StandardComputationHandler struct {
 	calculator        calculation.Calculator
@@ -52,7 +51,7 @@ func (c StandardComputationHandler) Compute(sessionId string, computeRequest Com
 	if len(strings.TrimSpace(input)) == 0 {
 		return SimpleHttpResponse[ComputeResponse]{ // TODO: Test
 			Status:   http.StatusBadRequest,
-			Response: ComputeResponse{Error: &EMPTY_INPUT_ERROR},
+			Response: ComputeResponse{Error: &errorid.EMPTY_INPUT_ERROR},
 		}
 	}
 

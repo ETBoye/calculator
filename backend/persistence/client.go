@@ -32,7 +32,7 @@ type CalculationsPageObject struct { // Page as in pagination object, not web pa
 	Items []HistoryRow
 }
 
-type CursorPositions struct {
+type cursorPositions struct {
 	Self  *int64
 	First *int64
 	Prev  *int64
@@ -117,7 +117,7 @@ func scanHistoryRow(rows pgx.Rows) (HistoryRow, error) {
 	}, err
 }
 
-func buildCalculationsPageObject(cursorPositions CursorPositions, items []HistoryRow) CalculationsPageObject {
+func buildCalculationsPageObject(cursorPositions cursorPositions, items []HistoryRow) CalculationsPageObject {
 	return CalculationsPageObject{
 		Self:  cursorPositions.Self,
 		First: cursorPositions.First,
@@ -128,15 +128,15 @@ func buildCalculationsPageObject(cursorPositions CursorPositions, items []Histor
 	}
 }
 
-func (postgresClient PostgresClient) computeCursorPositions(sessionId string, currentCursorOrNil *int64) (CursorPositions, error) {
+func (postgresClient PostgresClient) computeCursorPositions(sessionId string, currentCursorOrNil *int64) (cursorPositions, error) {
 	calculationIds, err := postgresClient.getAllCalculationIdsInSessionInDescendingOrder(sessionId)
 
 	if err != nil {
-		return CursorPositions{}, err
+		return cursorPositions{}, err
 	}
 
 	if len(calculationIds) == 0 {
-		return CursorPositions{
+		return cursorPositions{
 			First: nil,
 			Prev:  nil,
 			Next:  nil,
@@ -173,7 +173,7 @@ func (postgresClient PostgresClient) computeCursorPositions(sessionId string, cu
 
 			log.Printf("Got into special case where idxOfCurrent=%v is out of bounds", idxOfCurrent)
 
-			result := CursorPositions{
+			result := cursorPositions{
 				Self:  &currentCursor,
 				First: &first,
 				Prev:  &last,
@@ -210,7 +210,7 @@ func (postgresClient PostgresClient) computeCursorPositions(sessionId string, cu
 		nextResult = nil
 	}
 
-	return CursorPositions{
+	return cursorPositions{
 		Self:  &self,
 		First: &first,
 		Prev:  prevResult,
@@ -270,7 +270,7 @@ func (postgresClient PostgresClient) GetSessionHistory(sessionId string, cursor 
 	return postgresClient.GetSessionHistoryFromCursor(sessionId, cursorPositions)
 }
 
-func (postgresClient PostgresClient) GetSessionHistoryFromCursor(sessionId string, cursorPositions CursorPositions) (CalculationsPageObject, error) {
+func (postgresClient PostgresClient) GetSessionHistoryFromCursor(sessionId string, cursorPositions cursorPositions) (CalculationsPageObject, error) {
 	log.Printf("Fetching session history for sessionId %s with cursor %d", sessionId, cursorPositions.Self)
 	rows, err := postgresClient.conn.Query(context.Background(),
 		`SELECT calculationId, input, outputnum, outputdenom, outputestimate, error 

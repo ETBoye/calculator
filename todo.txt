@@ -1,18 +1,8 @@
-PRIORITERET TODO
-    - Lækker UX, specielt med brøkerne
-    - Skriv note omkring
-        - kommatal
-        - unær minus
-
-
-
 Fremsøg alle TODOS
 
-Skriv tekst om PEMDAS
 
 test coverage
 
-Kommaer?
 
 Input længde validering
     - til /compute
@@ -20,7 +10,6 @@ Input længde validering
     - til historie-id
     - Svaret i compute kan være for langt til at kunne gemmes i historikken! Kig på det!
 
-kig og opdater coverage
 
 Rewrite error og simplehttpresponse?
 

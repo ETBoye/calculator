@@ -16,13 +16,18 @@ import (
 )
 
 type GinServer struct {
+	endpoints api.Endpoints
 }
 
-func (ginServer *GinServer) StartServer(endpoints api.Endpoints) error {
+func NewGinServer(endpoints api.Endpoints) GinServer {
+	return GinServer{endpoints: endpoints}
+}
+
+func (ginServer *GinServer) StartServer() error {
 	router := gin.Default()
 
 	setupLogging(router)
-	registerEndpoints(router, endpoints)
+	registerEndpoints(router, ginServer.endpoints)
 
 	return router.Run()
 }

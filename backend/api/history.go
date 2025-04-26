@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/etboye/calculator/errorid"
 	"github.com/etboye/calculator/persistence"
 )
 
@@ -52,11 +53,10 @@ func (historyHandler StandardSessionHistoryHandler) GetSessionHistory(sessionId 
 		cursor, cursorParseErr := strconv.ParseInt(cursorQuery, 10, 64)
 
 		if cursorParseErr != nil {
-			errorId := "CURSOR_PARSING_ERROR"
 			log.Printf("Could not parse %s as int", cursorQuery)
 			return SimpleHttpResponse[CalculationsPage]{ // TODO: Test
 				Status:   http.StatusBadRequest,
-				Response: CalculationsPage{Error: &errorId},
+				Response: CalculationsPage{Error: &errorid.CURSOR_PARSING_ERROR},
 			}
 		}
 		unmappedCalculationsPage, persistenceError = historyHandler.persistenceClient.GetSessionHistory(sessionId, cursor)

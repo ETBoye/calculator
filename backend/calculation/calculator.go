@@ -3,7 +3,7 @@ package calculation
 type RationalNumber struct {
 	Num      string `json:"num"`
 	Denom    string `json:"denom"`
-	Estimate string `json:"estimate"` // Maybe float
+	Estimate string `json:"estimate"`
 }
 
 type CalculationResult struct {

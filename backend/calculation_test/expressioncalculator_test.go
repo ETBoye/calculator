@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/etboye/calculator/calculation"
+	"github.com/etboye/calculator/errorid"
 )
 
 type PanickyParser struct{}
@@ -16,14 +17,10 @@ func (p PanickyParser) Parse(input string) (*calculation.Expression, error) {
 	panic("This is my panic message")
 }
 
-var parsingErrorId string = "PARSING_ERROR"
-var lexingErrorId string = "LEXING_ERROR"
-var emptyInputErrorId string = "EMPTY_INPUT"
-
 func TestParserPanicRecovery(t *testing.T) {
 	log.SetOutput(io.Discard)
 
-	expectedErrorId := "PARSING_OR_LEXING_PANIC"
+	expectedErrorId := errorid.PARSING_OR_LEXING_PANIC_ERROR
 
 	calculatorWithPanickyParser := calculation.NewExpressionCalculatorWithParser(PanickyParser{})
 	result := calculatorWithPanickyParser.Compute("1+1")
@@ -47,15 +44,15 @@ func TestParsing(t *testing.T) {
 		assertExpectedError(t, calculator, inputString, expectedErrorId)
 	}
 
-	assertExpectedError("(", parsingErrorId)
-	assertExpectedError("+1", parsingErrorId)
-	assertExpectedError("1-", parsingErrorId)
-	assertExpectedError("(1+5/(2040*2*2+4)", parsingErrorId) // mismatched brackets
-	assertExpectedError("//", parsingErrorId)
-	assertExpectedError("+/+", parsingErrorId)
-	assertExpectedError("", emptyInputErrorId)
+	assertExpectedError("(", errorid.PARSING_ERROR)
+	assertExpectedError("+1", errorid.PARSING_ERROR)
+	assertExpectedError("1-", errorid.PARSING_ERROR)
+	assertExpectedError("(1+5/(2040*2*2+4)", errorid.PARSING_ERROR) // mismatched brackets
+	assertExpectedError("//", errorid.PARSING_ERROR)
+	assertExpectedError("+/+", errorid.PARSING_ERROR)
+	assertExpectedError("", errorid.EMPTY_INPUT_ERROR)
 
-	assertExpectedError("sdfadsf", lexingErrorId)
+	assertExpectedError("sdfadsf", errorid.LEXING_ERROR)
 }
 
 func TestCalculation(t *testing.T) {

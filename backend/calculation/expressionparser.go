@@ -8,6 +8,7 @@ import (
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/etboye/calculator/errorid"
 )
 
 type participleParser struct {
@@ -18,14 +19,14 @@ type participleParser struct {
 func (parser *participleParser) Parse(input string) (*Expression, error) {
 	if len(strings.TrimSpace(input)) == 0 {
 		log.Printf("Received empty input")
-		return nil, errors.New(EMPTY_INPUT_ERROR_ID)
+		return nil, errors.New(errorid.EMPTY_INPUT_ERROR)
 	}
 
 	tokens, lexerError := parser.parser.Lex("", strings.NewReader(input))
 
 	if lexerError != nil {
 		log.Println("Lexing error thrown:", lexerError.Error())
-		return nil, errors.New(LEXING_ERROR_ID)
+		return nil, errors.New(errorid.LEXING_ERROR)
 
 	}
 
@@ -35,7 +36,7 @@ func (parser *participleParser) Parse(input string) (*Expression, error) {
 
 	if err != nil {
 		log.Println("Parsing error thrown:", err.Error())
-		return nil, errors.New(PARSING_ERROR_ID)
+		return nil, errors.New(errorid.PARSING_ERROR)
 	}
 
 	log.Printf("Parsing succesful. Has parsed to %s", expression)

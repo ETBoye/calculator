@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	server := server.GinServer{}
 
 	persistenceClient, err := persistence.InitPostgresClient()
 
@@ -26,5 +25,8 @@ func main() {
 		ComputationHandler:    api.NewStandardComputationHandler(&calculator, persistenceClient),
 		SessionHistoryHandler: api.NewStandardSessionHistoryHandler(persistenceClient),
 	}
-	server.StartServer(endpoints)
+
+	server := server.NewGinServer(endpoints)
+
+	server.StartServer()
 }

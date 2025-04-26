@@ -96,6 +96,7 @@ import (
         "strings"
 
         "github.com/etboye/calculator/calculation"
+        "github.com/etboye/calculator/errorid"
         "github.com/etboye/calculator/persistence"
 )
 
@@ -111,8 +112,6 @@ type ComputeResponse struct {
 type ComputationHandler interface {
         Compute(sessionId string, computeRequest ComputeRequest) SimpleHttpResponse[ComputeResponse]
 }
-
-var EMPTY_INPUT_ERROR string = "Input was empty"
 
 type StandardComputationHandler struct {
         calculator        calculation.Calculator
@@ -143,7 +142,7 @@ func (c StandardComputationHandler) Compute(sessionId string, computeRequest Com
         if len(strings.TrimSpace(input)) == 0 </span><span class="cov0" title="0">{
                 return SimpleHttpResponse[ComputeResponse]{ // TODO: Test
                         Status:   http.StatusBadRequest,
-                        Response: ComputeResponse{Error: &amp;EMPTY_INPUT_ERROR},
+                        Response: ComputeResponse{Error: &amp;errorid.EMPTY_INPUT_ERROR},
                 }
         }</span>
 
@@ -176,6 +175,7 @@ import (
         "net/http"
         "strconv"
 
+        "github.com/etboye/calculator/errorid"
         "github.com/etboye/calculator/persistence"
 )
 
@@ -222,11 +222,10 @@ func (historyHandler StandardSessionHistoryHandler) GetSessionHistory(sessionId 
                 cursor, cursorParseErr := strconv.ParseInt(cursorQuery, 10, 64)
 
                 if cursorParseErr != nil </span><span class="cov0" title="0">{
-                        errorId := "CURSOR_PARSING_ERROR"
                         log.Printf("Could not parse %s as int", cursorQuery)
                         return SimpleHttpResponse[CalculationsPage]{ // TODO: Test
                                 Status:   http.StatusBadRequest,
-                                Response: CalculationsPage{Error: &amp;errorId},
+                                Response: CalculationsPage{Error: &amp;errorid.CURSOR_PARSING_ERROR},
                         }
                 }</span>
                 <span class="cov0" title="0">unmappedCalculationsPage, persistenceError = historyHandler.persistenceClient.GetSessionHistory(sessionId, cursor)</span>
@@ -272,30 +271,31 @@ import (
         "errors"
         "log"
         "regexp"
+
+        "github.com/etboye/calculator/errorid"
 )
 
 var sessionIdPatternString string = `^[a-zA-Z0-9\-]*$`
 var sessionIdPattern *regexp.Regexp = regexp.MustCompile(sessionIdPatternString)
 var sessionIdMinLength int = 1
 var sessionIdMaxLength int = 100
-var sessionIdValidationErrorId = "SESSION_ID_VALIDATION_ERROR"
 
 func validateSessionId(sessionId string) error <span class="cov0" title="0">{
         log.Println("Got sessionId: ", sessionId)
 
         if !sessionIdPattern.MatchString(sessionId) </span><span class="cov0" title="0">{
                 log.Printf("sessionId must match pattern %s", sessionIdPatternString)
-                return errors.New(sessionIdValidationErrorId)
+                return errors.New(errorid.SESSION_ID_VALIDATION_ERROR)
         }</span>
 
         <span class="cov0" title="0">if len(sessionId) &gt; sessionIdMaxLength </span><span class="cov0" title="0">{
                 log.Printf("sessionId must have length at most %d", sessionIdMaxLength) // TODO: test
-                return errors.New(sessionIdValidationErrorId)
+                return errors.New(errorid.SESSION_ID_VALIDATION_ERROR)
         }</span>
 
         <span class="cov0" title="0">if len(sessionId) &lt; sessionIdMinLength </span><span class="cov0" title="0">{
                 log.Printf("sessionId must have length at minimum %d", sessionIdMinLength) // TODO: test
-                return errors.New(sessionIdValidationErrorId)
+                return errors.New(errorid.SESSION_ID_VALIDATION_ERROR)
         }</span>
 
         <span class="cov0" title="0">return nil</span>
@@ -308,6 +308,7 @@ import (
         "errors"
         "log"
 
+        "github.com/etboye/calculator/errorid"
         "github.com/etboye/calculator/util"
 )
 
@@ -333,7 +334,7 @@ func (calculator ExpressionCalculator) Compute(input string) CalculationResult <
         // I can't seem to reproduce this - but we try to protect against it anyways
         expression, err := util.RecoverFromPanicWithError(
                 func() (*Expression, error) </span><span class="cov8" title="1">{ return calculator.parser.Parse(input) }</span>,
-                nil, errors.New(PARSING_OR_LEXING_PANIC_ERROR_ID), "Recovered from parsing panic")
+                nil, errors.New(errorid.PARSING_OR_LEXING_PANIC_ERROR), "Recovered from parsing panic")
 
         <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
                 errorId := err.Error()
@@ -467,6 +468,8 @@ import (
         "errors"
         "math/big"
         "strings"
+
+        "github.com/etboye/calculator/errorid"
 )
 
 // precondition: digitStringWithSign matches `-\d+`
@@ -502,7 +505,7 @@ func (t *Term) Eval() (*big.Rat, error) <span class="cov8" title="1">{
                         result.Mul(result, factorEval)
                 }</span> else<span class="cov8" title="1"> {
                         if factorEval.Cmp(big.NewRat(0, 1)) == 0 </span><span class="cov8" title="1">{
-                                return big.NewRat(1, 1), errors.New(DIVISION_BY_ZERO_ERROR_ID)
+                                return big.NewRat(1, 1), errors.New(errorid.DIVISION_BY_ZERO_ERROR)
                         }</span>
 
                         <span class="cov8" title="1">result.Quo(result, factorEval)</span> // TODO: Zero division and test for the same
@@ -561,6 +564,7 @@ import (
 
         "github.com/alecthomas/participle/v2"
         "github.com/alecthomas/participle/v2/lexer"
+        "github.com/etboye/calculator/errorid"
 )
 
 type participleParser struct {
@@ -571,14 +575,14 @@ type participleParser struct {
 func (parser *participleParser) Parse(input string) (*Expression, error) <span class="cov8" title="1">{
         if len(strings.TrimSpace(input)) == 0 </span><span class="cov8" title="1">{
                 log.Printf("Received empty input")
-                return nil, errors.New(EMPTY_INPUT_ERROR_ID)
+                return nil, errors.New(errorid.EMPTY_INPUT_ERROR)
         }</span>
 
         <span class="cov8" title="1">tokens, lexerError := parser.parser.Lex("", strings.NewReader(input))
 
         if lexerError != nil </span><span class="cov8" title="1">{
                 log.Println("Lexing error thrown:", lexerError.Error())
-                return nil, errors.New(LEXING_ERROR_ID)
+                return nil, errors.New(errorid.LEXING_ERROR)
 
         }</span>
 
@@ -588,7 +592,7 @@ func (parser *participleParser) Parse(input string) (*Expression, error) <span c
 
         if err != nil </span><span class="cov8" title="1">{
                 log.Println("Parsing error thrown:", err.Error())
-                return nil, errors.New(PARSING_ERROR_ID)
+                return nil, errors.New(errorid.PARSING_ERROR)
         }</span>
 
         <span class="cov8" title="1">log.Printf("Parsing succesful. Has parsed to %s", expression)
@@ -642,7 +646,6 @@ import (
 )
 
 func main() <span class="cov0" title="0">{
-        server := server.GinServer{}
 
         persistenceClient, err := persistence.InitPostgresClient()
 
@@ -657,7 +660,10 @@ func main() <span class="cov0" title="0">{
                 ComputationHandler:    api.NewStandardComputationHandler(&amp;calculator, persistenceClient),
                 SessionHistoryHandler: api.NewStandardSessionHistoryHandler(persistenceClient),
         }
-        server.StartServer(endpoints)</span>
+
+        server := server.NewGinServer(endpoints)
+
+        server.StartServer()</span>
 }
 </pre>
 		
@@ -695,7 +701,7 @@ type CalculationsPageObject struct { // Page as in pagination object, not web pa
         Items []HistoryRow
 }
 
-type CursorPositions struct {
+type cursorPositions struct {
         Self  *int64
         First *int64
         Prev  *int64
@@ -780,7 +786,7 @@ func scanHistoryRow(rows pgx.Rows) (HistoryRow, error) <span class="cov0" title=
         }, err</span>
 }
 
-func buildCalculationsPageObject(cursorPositions CursorPositions, items []HistoryRow) CalculationsPageObject <span class="cov0" title="0">{
+func buildCalculationsPageObject(cursorPositions cursorPositions, items []HistoryRow) CalculationsPageObject <span class="cov0" title="0">{
         return CalculationsPageObject{
                 Self:  cursorPositions.Self,
                 First: cursorPositions.First,
@@ -791,15 +797,15 @@ func buildCalculationsPageObject(cursorPositions CursorPositions, items []Histor
         }
 }</span>
 
-func (postgresClient PostgresClient) computeCursorPositions(sessionId string, currentCursorOrNil *int64) (CursorPositions, error) <span class="cov0" title="0">{
+func (postgresClient PostgresClient) computeCursorPositions(sessionId string, currentCursorOrNil *int64) (cursorPositions, error) <span class="cov0" title="0">{
         calculationIds, err := postgresClient.getAllCalculationIdsInSessionInDescendingOrder(sessionId)
 
         if err != nil </span><span class="cov0" title="0">{
-                return CursorPositions{}, err
+                return cursorPositions{}, err
         }</span>
 
         <span class="cov0" title="0">if len(calculationIds) == 0 </span><span class="cov0" title="0">{
-                return CursorPositions{
+                return cursorPositions{
                         First: nil,
                         Prev:  nil,
                         Next:  nil,
@@ -836,7 +842,7 @@ func (postgresClient PostgresClient) computeCursorPositions(sessionId string, cu
 
                         log.Printf("Got into special case where idxOfCurrent=%v is out of bounds", idxOfCurrent)
 
-                        result := CursorPositions{
+                        result := cursorPositions{
                                 Self:  &amp;currentCursor,
                                 First: &amp;first,
                                 Prev:  &amp;last,
@@ -873,7 +879,7 @@ func (postgresClient PostgresClient) computeCursorPositions(sessionId string, cu
                 nextResult = nil
         }</span>
 
-        <span class="cov0" title="0">return CursorPositions{
+        <span class="cov0" title="0">return cursorPositions{
                 Self:  &amp;self,
                 First: &amp;first,
                 Prev:  prevResult,
@@ -933,7 +939,7 @@ func (postgresClient PostgresClient) GetSessionHistory(sessionId string, cursor 
         <span class="cov0" title="0">return postgresClient.GetSessionHistoryFromCursor(sessionId, cursorPositions)</span>
 }
 
-func (postgresClient PostgresClient) GetSessionHistoryFromCursor(sessionId string, cursorPositions CursorPositions) (CalculationsPageObject, error) <span class="cov0" title="0">{
+func (postgresClient PostgresClient) GetSessionHistoryFromCursor(sessionId string, cursorPositions cursorPositions) (CalculationsPageObject, error) <span class="cov0" title="0">{
         log.Printf("Fetching session history for sessionId %s with cursor %d", sessionId, cursorPositions.Self)
         rows, err := postgresClient.conn.Query(context.Background(),
                 `SELECT calculationId, input, outputnum, outputdenom, outputestimate, error 
@@ -1003,13 +1009,18 @@ import (
 )
 
 type GinServer struct {
+        endpoints api.Endpoints
 }
 
-func (ginServer *GinServer) StartServer(endpoints api.Endpoints) error <span class="cov0" title="0">{
+func NewGinServer(endpoints api.Endpoints) GinServer <span class="cov0" title="0">{
+        return GinServer{endpoints: endpoints}
+}</span>
+
+func (ginServer *GinServer) StartServer() error <span class="cov0" title="0">{
         router := gin.Default()
 
         setupLogging(router)
-        registerEndpoints(router, endpoints)
+        registerEndpoints(router, ginServer.endpoints)
 
         return router.Run()
 }</span>
