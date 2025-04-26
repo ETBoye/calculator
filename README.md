@@ -173,6 +173,11 @@ This application is running at [https://calculator.etboye.dk](https://calculator
 # Next up
 
 I would like to
+ - Write more unit tests
+ - Refactor the pagination code
+ - Put an index on the history table?
+ - Refactor errors in response bodies using the SimpleHttpResponse generic struct
+ - Do input and output validation to handle errors when any value is outside the column sizes defined in the database
+ - Find all the TODOS in the code and do them
 
-- Write unit tests
-- Refactor the pagination code.
+
