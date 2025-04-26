@@ -40,7 +40,7 @@ type CursorPositions struct {
 }
 
 type PersistenceClient interface {
-	SaveComputation(sessionId string, calculationResult calculation.CalculationResult) error
+	SaveComputation(sessionId string, input string, calculationResult calculation.CalculationResult) error
 	GetSessionHistory(sessionId string, cursor int64) (CalculationsPageObject, error)
 	GetSessionHistoryFirstPage(sessionId string) (CalculationsPageObject, error)
 }
@@ -49,9 +49,18 @@ type PostgresClient struct {
 	conn *pgx.Conn
 }
 
-func (postgresClient PostgresClient) SaveComputation(sessionId string, calculationResult calculation.CalculationResult) error {
-
-	return nil // TODO: implement
+func (postgresClient PostgresClient) SaveComputation(sessionId string, input string, calculationResult calculation.CalculationResult) error {
+	_, err := postgresClient.conn.Exec(context.Background(),
+		`INSERT INTO history (sessionId, input, outputNum, outputDenom, outputEstimate, error) VALUES 
+		($1, $2, $3, $4, $5, $6);`,
+		sessionId,
+		input,
+		calculationResult.Result.Num,
+		calculationResult.Result.Denom,
+		calculationResult.Result.Estimate,
+		calculationResult.ErrorId,
+	)
+	return err
 }
 
 func scanHistoryRow(rows pgx.Rows) (HistoryRow, error) {

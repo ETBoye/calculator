@@ -58,7 +58,7 @@ func (c StandardComputationHandler) Compute(sessionId string, computeRequest Com
 
 	calculationResult := c.calculator.Compute(input)
 
-	persistenceError := c.persistenceClient.SaveComputation(sessionId, calculationResult)
+	persistenceError := c.persistenceClient.SaveComputation(sessionId, input, calculationResult)
 
 	if persistenceError != nil {
 		errorId := persistenceError.Error()
