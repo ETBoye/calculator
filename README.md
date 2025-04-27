@@ -3,7 +3,11 @@
 
 This is a simple calculator which computes expressions with integers. You can see it deployed at [https://calculator.etboye.dk](https://calculator.etboye.dk).
 
-  
+### Features
+
+ - You can compute complicated expressions with integers, the usual four binary operators and brackets. Parsing of the input is done using [participle](https://github.com/alecthomas/participle).
+ - You can see historic calculations for sessions. The backend api has a paginated endpoint following the [zalando guidelines](https://opensource.zalando.com/restful-api-guidelines/#pagination).
+
 
 # Backend API
 
