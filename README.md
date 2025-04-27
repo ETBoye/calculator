@@ -155,7 +155,7 @@ This exposes
 
 - The whole application as it will be deployed on `http://localhost:8089`
 
-- Note that requests `http://localhost:8089/api/:restofurl` is proxied to the backend as `/:restofurl`
+ - Note that requests `http://localhost:8089/api/:restofurl` is proxied to the backend as `/:restofurl`
 
 - Dozzle on `http://localhost:8089/dozzle`
 
