@@ -17,7 +17,7 @@ The backend exposes two endpoints.
 ## Compute
 ```
 POST /sessions/:sessionid/compute
-Exapmple body: 
+Example body: 
 {
 	"input": "1+4"
 }
