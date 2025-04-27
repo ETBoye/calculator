@@ -583,7 +583,7 @@ import (
         "github.com/etboye/calculator/errorid"
 )
 
-type parser interface { // TODO private
+type parser interface {
         Parse(input string) (*Expression, error)
 }
 
@@ -840,12 +840,13 @@ import (
         "github.com/etboye/calculator/calculation"
         "github.com/etboye/calculator/errorid"
         "github.com/jackc/pgx/v5"
+        "github.com/jackc/pgx/v5/pgxpool"
 )
 
 var pageMaxNumberOfItems = 5
 
 type PostgresClient struct {
-        conn *pgx.Conn
+        conn *pgxpool.Pool
 }
 
 func (postgresClient PostgresClient) SaveComputation(
@@ -972,7 +973,7 @@ func (postgresClient PostgresClient) GetSessionHistoryFromCursor(sessionId strin
 
 func InitPostgresClient() (PostgresClient, error) <span class="cov0" title="0">{
         databaseUrl := getDatabaseUrl()
-        conn, err := pgx.Connect(context.Background(), databaseUrl)
+        conn, err := pgxpool.New(context.Background(), databaseUrl)
         if err != nil </span><span class="cov0" title="0">{
                 return PostgresClient{}, err
         }</span>
