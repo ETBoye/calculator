@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "ac4c593f-b4f3-482e-a58c-7186a3c88c83",
+		"_postman_id": "a914e2a5-d638-4290-8605-b31b220a558b",
 		"name": "Calculator",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "8147562"
@@ -234,7 +234,7 @@
 							"response": []
 						},
 						{
-							"name": "Get History - empty cursor Copy",
+							"name": "Get History - empty cursor, other session id",
 							"request": {
 								"method": "GET",
 								"header": [],
@@ -320,7 +320,7 @@
 							"response": []
 						},
 						{
-							"name": "Session id too long Copy",
+							"name": "Session id too long",
 							"protocolProfileBehavior": {
 								"disableBodyPruning": true
 							},
