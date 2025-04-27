@@ -41,7 +41,15 @@ then
     exit
 fi
 
-$DOCKER_COMPOSE_COMMAND build
+
+case $APP_ENV in
+    prod)
+        $DOCKER_COMPOSE_COMMAND --parallel=1 build # my droplet does not have that much ram..
+        ;;
+    test)
+        $DOCKER_COMPOSE_COMMAND build
+        ;;
+esac
 $DOCKER_COMPOSE_COMMAND down
 
 echo "GIN MODE $GIN_MODE"
@@ -52,5 +60,4 @@ case $APP_ENV in
     test)
         GIN_MODE=$GIN_MODE $DOCKER_COMPOSE_COMMAND up
         ;;
- 
 esac
