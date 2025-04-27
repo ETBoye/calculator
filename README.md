@@ -158,7 +158,13 @@ This exposes
  - Dozzle on `http://localhost:8089/dozzle`
  - The backend on `http://localhost:8080`
 
-  
+### Developing
+
+For ease of development, you can start the services individually.
+
+    - **Backend:** Change directory to `backend` and run `POSTGRES_USER=user POSTGRES_PASSWORD=secret APP_ENV=test ./run-dev.sh`
+    - **Database:** Change directory to `db` and run `POSTGRES_USER=user POSTGRES_PASSWORD=secret APP_ENV=test ./run-dev.sh`
+    - **Frontend:** Change directory to `frontend` and run `npm run dev`
   
 
 # Deployment on digital ocean
